@@ -1,0 +1,13 @@
+@host = localhost:5001
+
+### Check-in amolenk
+POST https://{{host}}/venues/herberg-jan/checkin/amolenk
+
+### Check-in hompus
+POST https://{{host}}/venues/herberg-jan/checkin/mhompus
+
+### Check-out
+POST https://{{host}}/venues/herberg-jan/checkout/amolenk
+
+### Check-out
+POST https://{{host}}/venues/herberg-jan/checkout/mhompus
