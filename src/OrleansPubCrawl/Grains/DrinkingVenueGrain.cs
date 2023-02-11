@@ -1,22 +1,36 @@
 using Orleans.Runtime;
+using Orleans.Utilities;
 
 public interface IDrinkingVenueGrain : IGrainWithStringKey
 {
     Task CheckInAsync(ICrawlerGrain crawler);
 
     Task CheckOutAsync(ICrawlerGrain crawler);
+
+    Task SubscribeAsync(IHandleVenueEvents observer);
 }
 
 public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
 {
+    private readonly ObserverManager<IHandleVenueEvents> _observerManager;
     private readonly IPersistentState<DrinkingVenueState> _state;
     private readonly ILogger<DrinkingVenueGrain> _logger;
 
-    public DrinkingVenueGrain([PersistentState("venue", "venue")] IPersistentState<DrinkingVenueState> state,
+    public DrinkingVenueGrain([PersistentState("venues", "memory")] IPersistentState<DrinkingVenueState> state,
         ILogger<DrinkingVenueGrain> logger)
     {
+        // TODO Check that the timespan is used to clean up the observers that don't respond.
+        _observerManager = new ObserverManager<IHandleVenueEvents>(TimeSpan.FromMinutes(5), logger);
         _state = state;
         _logger = logger;
+    }
+
+    public Task SubscribeAsync(IHandleVenueEvents observer)
+    {
+        // TODO check what the parameters mean
+        _observerManager.Subscribe(observer, observer);
+
+        return Task.CompletedTask;
     }
 
     public async Task CheckInAsync(ICrawlerGrain crawler)
@@ -32,6 +46,8 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
                 crawler.GetPrimaryKeyString(),
                 _state.State.Crawlers.Count - 1,
                 this.GetPrimaryKeyString());
+            
+            await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(_state.State.Crawlers.Count));
         }
     }
 
@@ -48,6 +64,9 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
                 crawler.GetPrimaryKeyString(),
                 _state.State.Crawlers.Count,
                 this.GetPrimaryKeyString());
+
+            // TODO Check transactional properties
+            await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(_state.State.Crawlers.Count));
         }
     }
 }

@@ -1,13 +1,17 @@
 @host = localhost:5001
+@eventId = bokkentocht-2023
+
+### Register venue
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan
 
 ### Check-in amolenk
-POST https://{{host}}/venues/herberg-jan/checkin/amolenk
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
 
 ### Check-in hompus
-POST https://{{host}}/venues/herberg-jan/checkin/mhompus
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/mhompus
 
 ### Check-out
-POST https://{{host}}/venues/herberg-jan/checkout/amolenk
+DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
 
 ### Check-out
-POST https://{{host}}/venues/herberg-jan/checkout/mhompus
+DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/mhompus
