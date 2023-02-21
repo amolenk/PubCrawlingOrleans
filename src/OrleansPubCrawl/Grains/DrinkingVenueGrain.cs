@@ -1,13 +1,17 @@
 using Orleans.Runtime;
 using Orleans.Utilities;
 
-public interface IDrinkingVenueGrain : IGrainWithStringKey
+public interface IDrinkingVenueGrain : IGrainWithGuidCompoundKey
 {
-    Task CheckInAsync(ICrawlerGrain crawler);
+    Task RegisterAsync();
 
-    Task CheckOutAsync(ICrawlerGrain crawler);
+    Task RegisterBeerAsync(string beerId);
 
-    Task SubscribeAsync(IHandleVenueEvents observer);
+    Task EnterAsync(ICrawlerGrain crawler);
+
+    Task LeaveAsync(ICrawlerGrain crawler);
+
+    Task ObserveAsync(IHandleVenueEvents observer);
 }
 
 public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
@@ -16,7 +20,7 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
     private readonly IPersistentState<DrinkingVenueState> _state;
     private readonly ILogger<DrinkingVenueGrain> _logger;
 
-    public DrinkingVenueGrain([PersistentState("venues", "memory")] IPersistentState<DrinkingVenueState> state,
+    public DrinkingVenueGrain([PersistentState("state")] IPersistentState<DrinkingVenueState> state,
         ILogger<DrinkingVenueGrain> logger)
     {
         // TODO Check that the timespan is used to clean up the observers that don't respond.
@@ -25,7 +29,28 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
         _logger = logger;
     }
 
-    public Task SubscribeAsync(IHandleVenueEvents observer)
+    public async Task RegisterAsync()
+    {
+        _state.State.IsRegistered = true;
+        await _state.WriteStateAsync();
+    }
+
+    public async Task RegisterBeerAsync(string beerId)
+    {
+        var eventId = this.GetPrimaryKey(out var venueId);
+
+        if (!_state.State.IsRegistered)
+        {
+            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+        }
+
+        var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
+
+        var beerGrain = GrainFactory.GetGrain<IBeerGrain>(beerKey);
+        await beerGrain.RegisterAsync(this);
+    }
+
+    public Task ObserveAsync(IHandleVenueEvents observer)
     {
         // TODO check what the parameters mean
         _observerManager.Subscribe(observer, observer);
@@ -33,45 +58,62 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
         return Task.CompletedTask;
     }
 
-    public async Task CheckInAsync(ICrawlerGrain crawler)
+    public async Task EnterAsync(ICrawlerGrain crawler)
     {
+        var eventId = this.GetPrimaryKey(out var venueId);
+
+        if (!_state.State.IsRegistered)
+        {
+            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+        }
+
         var crawlerId = crawler.GetPrimaryKeyString();
 
         if (!_state.State.Crawlers.Contains(crawlerId))
         {
-            _state.State.Crawlers.Add(crawler.GetPrimaryKeyString());
+            _state.State.Crawlers.Add(crawlerId);
             await _state.WriteStateAsync();
-
-            _logger.LogInformation("😃 Crawler {CrawlerId} has joined {Count} other crawler(s) in {VenueId}",
-                crawler.GetPrimaryKeyString(),
-                _state.State.Crawlers.Count - 1,
-                this.GetPrimaryKeyString());
-            
-            await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(_state.State.Crawlers.Count));
         }
+
+        await OnNumberOfCrawlersChangedAsync();
     }
 
-    public async Task CheckOutAsync(ICrawlerGrain crawler)
+    public async Task LeaveAsync(ICrawlerGrain crawler)
     {
+        var eventId = this.GetPrimaryKey(out var venueId);
+
+        if (!_state.State.IsRegistered)
+        {
+            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+        }
+
         var crawlerId = crawler.GetPrimaryKeyString();
 
         if (_state.State.Crawlers.Contains(crawlerId))
         {
-            _state.State.Crawlers.Remove(crawler.GetPrimaryKeyString());
+            _state.State.Crawlers.Remove(crawlerId);
             await _state.WriteStateAsync();
-
-            _logger.LogInformation("😕 Crawler {CrawlerId} has left {Count} other crawler(s) behind in {VenueId}",
-                crawler.GetPrimaryKeyString(),
-                _state.State.Crawlers.Count,
-                this.GetPrimaryKeyString());
-
-            // TODO Check transactional properties
-            await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(_state.State.Crawlers.Count));
         }
+
+        await OnNumberOfCrawlersChangedAsync();
+    }
+
+    private async Task OnNumberOfCrawlersChangedAsync()
+    {
+        this.GetPrimaryKey(out var venueId);
+
+        _logger.LogInformation("🍻 There are now {Count} crawler(s) in {Venue}",
+            _state.State.Crawlers.Count,
+            venueId);
+
+        await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(
+            venueId, _state.State.Crawlers.Count));
     }
 }
 
 public class DrinkingVenueState
 {
+    public bool IsRegistered { get; set; }
+    public HashSet<string> Beers { get; set; } = new();
     public HashSet<string> Crawlers { get; set; } = new();
 }

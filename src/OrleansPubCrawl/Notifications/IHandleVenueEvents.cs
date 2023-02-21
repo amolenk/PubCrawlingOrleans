@@ -1,4 +1,4 @@
 public interface IHandleVenueEvents : IGrainObserver
 {
-    Task OnNumberOfCrawlersChangedAsync(int crawlerCount);
+    Task OnNumberOfCrawlersChangedAsync(string venueId, int crawlerCount);
 }

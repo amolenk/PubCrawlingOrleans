@@ -1,8 +1,11 @@
 @host = localhost:5001
-@eventId = bokkentocht-2023
+@eventId = 00f03de4-040e-4e6d-988c-716fb9546d70
 
 ### Register venue
 POST https://{{host}}/events/{{eventId}}/venues/herberg-jan
+
+### Get attendance map
+GET https://{{host}}/events/{{eventId}}/attendance
 
 ### Check-in amolenk
 POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
@@ -15,3 +18,12 @@ DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
 
 ### Check-out
 DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/mhompus
+
+### Register a beer
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock
+
+### Like a beer
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock/likes?crawlerId=amolenk
+
+### Dislike a beer
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock/dislikes?crawlerId=amolenk

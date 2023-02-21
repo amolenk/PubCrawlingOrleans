@@ -1,9 +1,12 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
+
+ <div id="map" style="height: 750px; width: 100%; background-color: red;"></div>
 
 <div class="form-group">
     <label>
@@ -28,6 +31,7 @@
     }
 </ul>
 
+
 @code {
     private HubConnection? hubConnection;
     private List<string> messages = new List<string>();
@@ -36,19 +40,34 @@
 
     protected override async Task OnInitializedAsync()
     {
+        @* await JSRuntime.InvokeVoidAsync("initializeMap"); *@
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl("https://localhost:5001/geohub")
             .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection.On<Venue>("OnVenueUpdated", (venue) =>
         {
-            var encodedMsg = $"{user}: {message}";
+            var encodedMsg = $"{venue.CrawlerCount} {venue.Name}";
             messages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
+
+            JSRuntime.InvokeVoidAsync("updateMap", venue);
         });
 
         await hubConnection.StartAsync();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                await JSRuntime.InvokeVoidAsync("initializeMap");
+            }
+            //base.OnAfterRenderAsync(firstRender);
+        }
+
+    
 
     private async Task Send()
     {

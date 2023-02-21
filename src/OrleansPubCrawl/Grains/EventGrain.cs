@@ -1,57 +1,80 @@
 using Orleans.Runtime;
 
-public interface IEventGrain : IGrainWithStringKey
+public interface IEventGrain : IGrainWithGuidKey
 {
-    Task RegisterVenueAsync(IDrinkingVenueGrain venue);
+    Task RegisterVenueAsync(string venueId);
 
-    Task<bool> IsRegisteredVenueAsync(string venueId);
+    // Task<bool> IsRegisteredVenueAsync(string venueId);
 
+    // Task<bool> ExistsAsync();
     // Task StartAsync();
 }
 
 public class EventGrain : Grain, IEventGrain
 {
-    private readonly IPersistentState<EventState> _state;
+//    private readonly IPersistentState<EventState> _state;
     private readonly ILogger<EventGrain> _logger;
 
-    public EventGrain([PersistentState("events", "memory")] IPersistentState<EventState> state,
+    public EventGrain(//[PersistentState("events", "memory")] IPersistentState<EventState> state,
         ILogger<EventGrain> logger)
     {
-        _state = state;
+        // _state = state;
         _logger = logger;
     }
 
-    public Task<bool> IsRegisteredVenueAsync(string venueId)
+    // public Task<bool> ExistsAsync()
+    // {
+    //     if (_state.State.Created)
+    //     {
+    //         return Task.FromResult(true);
+    //     }
+
+    //     DeactivateOnIdle();
+        
+    //     return Task.FromResult(false);
+    // }
+
+    // public Task<bool> IsRegisteredVenueAsync(string venueId)
+    // {
+    //     var isRegistered = _state.State.Venues.Contains(venueId);
+
+    //     return Task.FromResult(isRegistered);
+    // }
+
+    public async Task RegisterVenueAsync(string venueId)
     {
-        var isRegistered = _state.State.Venues.Contains(venueId);
+        // if (_state.State.Venues.Contains(venueId))
+        // {
+        //     return;
+        // }
 
-        return Task.FromResult(isRegistered);
-    }
+        var primaryKey = this.GetPrimaryKey();
 
-    public async Task RegisterVenueAsync(IDrinkingVenueGrain venue)
-    {
-        var venueId = venue.GetPrimaryKeyString();
+        var venuGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(primaryKey, venueId, null);
+        await venuGrain.RegisterAsync();
 
-        if (!_state.State.Venues.Contains(venueId))
+        // Is this transactional?
+        var mapGrain = GrainFactory.GetGrain<IEventMapGrain>(primaryKey);
+
+        await mapGrain.SetVenueLocationAsync(new VenueLocation
         {
-            _state.State.Venues.Add(venueId);
-            await _state.WriteStateAsync();
+            VenueId = venueId,
+            Name = venueId,
+            Latitude = 51.5074,
+            Longitude = 0.1278
+        });
 
-            _logger.LogInformation("🧱 Venue {VenueId} has joined {Count} other venue(s) for event {EventId}",
-                venueId,
-                _state.State.Venues.Count - 1,
-                this.GetPrimaryKeyString());
+        // _state.State.Venues.Add(venueId);
+        // await _state.WriteStateAsync();
 
-            // Is this transactional?
-            var geographyGrain = GrainFactory.GetGrain<IGeographyGrain>(
-                this.GetPrimaryKeyString());
+        _logger.LogInformation("🧱 Venue {VenueId} has joined event {EventId}",
+            venueId,
+            primaryKey);
 
-            await geographyGrain.AddLocation(new Position
-            {
-                Latitude = 51.5074,
-                Longitude = 0.1278
-            }, venueId);
-        }
+        // _logger.LogInformation("🧱 Venue {VenueId} has joined {Count} other venue(s) for event {EventId}",
+        //     venueId,
+        //     _state.State.Venues.Count - 1,
+        //     primaryKey);
     }
 
     // public async Task<bool> StartAsync()
@@ -77,7 +100,8 @@ public class EventGrain : Grain, IEventGrain
     // }
 }
 
-public class EventState
-{
-    public HashSet<string> Venues { get; set; } = new();
-}
+// public class EventState
+// {
+//     public bool Created { get; set; }
+//     public HashSet<string> Venues { get; set; } = new();
+// }
