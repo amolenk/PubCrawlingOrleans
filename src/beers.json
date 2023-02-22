@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Pliny the Elder",
+    "type": "Double IPA",
+    "description": "An intense and hoppy brew with a citrus and pine aroma."
+  },
+  {
+    "name": "Heady Topper",
+    "type": "Double IPA",
+    "description": "A hazy and unfiltered beer with a juicy, tropical fruit flavor."
+  },
+  {
+    "name": "Bourbon County Brand Stout",
+    "type": "Imperial Stout",
+    "description": "A rich and boozy beer aged in bourbon barrels with notes of chocolate and vanilla."
+  },
+  {
+    "name": "Dark Lord",
+    "type": "Russian Imperial Stout",
+    "description": "A complex and intense brew with flavors of roasted malt, coffee, and dark fruit."
+  },
+  {
+    "name": "Hopslam",
+    "type": "Double IPA",
+    "description": "A highly hopped beer with a sweet honey malt balance and a grapefruit finish."
+  },
+  {
+    "name": "KBS",
+    "type": "Imperial Stout",
+    "description": "A smooth and silky beer with flavors of coffee, chocolate, and bourbon."
+  },
+  {
+    "name": "Fou' Foune",
+    "type": "Lambic",
+    "description": "A sour and fruity beer with a peach flavor and a dry finish."
+  },
+  {
+    "name": "Cantillon Gueuze",
+    "type": "Lambic",
+    "description": "A complex and funky beer with a sour and tart taste and a champagne-like effervescence."
+  },
+  {
+    "name": "Westvleteren 12",
+    "type": "Quadrupel",
+    "description": "A rich and fruity beer with a malty sweetness and a warming alcohol finish."
+  },
+  {
+    "name": "Trappist Rochefort 10",
+    "type": "Quadrupel",
+    "description": "A deep and complex beer with notes of dark fruit, caramel, and chocolate."
+  },
+  {
+    "name": "Pliny the Younger",
+    "type": "Triple IPA",
+    "description": "A massively hopped beer with a tropical fruit flavor and a piney bitterness."
+  },
+  {
+    "name": "Sculpin IPA",
+    "type": "American IPA",
+    "description": "A hoppy and citrusy beer with a crisp and clean finish."
+  },
+  {
+    "name": "Weihenstephaner Hefeweissbier",
+    "type": "Hefeweizen",
+    "description": "A light and refreshing beer with flavors of banana and clove and a creamy mouthfeel."
+  },
+  {
+    "name": "Orval",
+    "type": "Trappist Ale",
+    "description": "A complex and spicy beer with a dry finish and a Brettanomyces funkiness."
+  },
+  {
+    "name": "La Fin Du Monde",
+    "type": "Tripel",
+    "description": "A smooth and balanced beer with flavors of fruit, spice, and a hint of sweetness."
+  },
+  {
+    "name": "Duvel",
+    "type": "Belgian Strong Ale",
+    "description": "A golden and effervescent beer with a dry and bitter finish."
+  },
+  {
+    "name": "Emelisse Triple IPA",
+    "type": "Triple IPA",
+    "description": "A bold and bitter beer with a fruity hop aroma and a high alcohol content."
+  },
+  {
+    "name": "Brouwerij 't IJ IPA",
+    "type": "American IPA",
+    "description": "A hoppy and refreshing beer with a citrusy and piney aroma and a crisp finish."
+  },
+  {
+    "name": "De Molen Rasputin",
+    "type": "Russian Imperial Stout",
+    "description": "A complex and flavorful beer with notes of chocolate, coffee, and dark fruit."
+  },
+  {
+    "name": "Jopen Mooie Nel IPA",
+    "type": "American IPA",
+    "description": "A well-balanced and smooth IPA with a tropical fruit aroma and a bitter finish."
+  },
+  {
+    "name": "Gebrouwen door Vrouwen Gluiperd",
+    "type": "Double IPA",
+    "description": "A hoppy and full-bodied beer with a floral and fruity aroma and a lingering bitterness."
+  },
+  {
+    "name": "Kaapse Brouwers Karel",
+    "type": "Imperial Stout",
+    "description": "A rich and full-bodied beer with a roasted malt character and a smooth finish."
+  },
+  {
+    "name": "Baxbier Kon Minder",
+    "type": "Session IPA",
+    "description": "A light and refreshing beer with a fruity hop aroma and a low alcohol content."
+  },
+  {
+    "name": "Oedipus Mannenliefde",
+    "type": "Saison",
+    "description": "A spicy and fruity beer with a dry and refreshing finish."
+  },
+  {
+    "name": "Bierbrouwerij De Koningshoeven Quadrupel",
+    "type": "Quadrupel",
+    "description": "A rich and complex beer with a malty sweetness and a warming alcohol finish."
+  },
+  {
+    "name": "Dutch Bargain Imperial Stout",
+    "type": "Imperial Stout",
+    "description": "A smooth and velvety beer with notes of chocolate, coffee, and caramel."
+  }
+]

@@ -1,6 +1,5 @@
-[GenerateSerializer]
-public class VenueAttendance : VenueLocation
+public class VenueAttendance
 {
-    [Id(0)]
+    public string Id { get; set; } = string.Empty;
     public int CrawlerCount { get; set; }
 }

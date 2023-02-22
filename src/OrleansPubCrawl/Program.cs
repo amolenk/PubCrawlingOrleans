@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
 
-builder.Services.AddHostedService<ChangeFeedService>();
+// builder.Services.AddHostedService<ChangeFeedService>();
 
 builder.Services.AddResponseCompression(opts =>
 {
@@ -23,24 +23,24 @@ builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder.UseLocalhostClustering();
 
-    siloBuilder.AddAzureCosmosGrainStorage("memory", options =>
-    {
-        options.ConfigureCosmosClient(
-            builder.Configuration["Cosmos:ConnectionString"]!,
-            builder.Configuration["Cosmos:DatabaseName"]!,
-            builder.Configuration["Cosmos:Containers:GrainState"]!);
-    });
+    // siloBuilder.AddAzureCosmosGrainStorage("memory", options =>
+    // {
+    //     options.ConfigureCosmosClient(
+    //         builder.Configuration["Cosmos:ConnectionString"]!,
+    //         builder.Configuration["Cosmos:DatabaseName"]!,
+    //         builder.Configuration["Cosmos:Containers:GrainState"]!);
+    // });
 
-    siloBuilder.AddAzureCosmosGrainStorageAsDefault(options =>
-    {
-        options.ConfigureCosmosClient(
-            builder.Configuration["Cosmos:ConnectionString"]!,
-            builder.Configuration["Cosmos:DatabaseName"]!,
-            builder.Configuration["Cosmos:Containers:GrainState"]!);
-    });
+    // siloBuilder.AddAzureCosmosGrainStorageAsDefault(options =>
+    // {
+    //     options.ConfigureCosmosClient(
+    //         builder.Configuration["Cosmos:ConnectionString"]!,
+    //         builder.Configuration["Cosmos:DatabaseName"]!,
+    //         builder.Configuration["Cosmos:Containers:GrainState"]!);
+    // });
 
-    // siloBuilder.AddMemoryGrainStorage("memory");
-    // siloBuilder.AddMemoryGrainStorageAsDefault();
+    siloBuilder.AddMemoryGrainStorage("memory");
+    siloBuilder.AddMemoryGrainStorageAsDefault();
     siloBuilder.UseInMemoryReminderService();
 });
 
@@ -48,7 +48,7 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 
-app.MapHub<GeographyHub>("/geohub");
+//app.MapHub<GeographyHub>("/geohub");
 
 // Get the list of drinking venues including attendance.
 // app.MapGet("/events/{eventId}/attendance",
@@ -59,98 +59,106 @@ app.MapHub<GeographyHub>("/geohub");
 //         return Results.Ok(await mapGrain.GetAttendanceAsync());
 //     });
 
-app.MapPost("/events/{eventId}/venues/{venueId}",
-    async (IGrainFactory grainFactory, Guid eventId, string venueId) =>
+// Register an event.
+app.MapPost("/events/{eventId}",
+    async (IGrainFactory grainFactory, int eventId, [FromBody] EventRegistration registration) =>
     {
-        var eventGrain = grainFactory.GetGrain<IEventGrain>(eventId);
-        await eventGrain.RegisterVenueAsync(venueId);
+        // TODO Validate that the registration is valid.
+
+        var beerSelectionGrain = grainFactory.GetGrain<IBeerSelectionGrain>(eventId);
+        await beerSelectionGrain.AddOrUpdateBeersAsync(registration.Beers);
+
+        var eventMapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
+
+        foreach (var venue in registration.Venues)
+        {
+            var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venue.Id, null);
+            await venueGrain.RegisterAsync(venue);
+
+            await eventMapGrain.AddOrUpdateVenueLocationAsync(venue);
+        }
 
         return Results.Ok();
     });
 
-// app.MapPost("/events/{eventId}/crawlers/{crawlerId}",
-//     async (IGrainFactory grainFactory, string eventId, string crawlerId) =>
-//     {
-//         var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-//         await crawlerGrain.JoinEventAsync(eventId);
+// Get the event map.
+app.MapGet("/events/{eventId}/map",
+    async (IGrainFactory grainFactory, int eventId) =>
+    {
+        var eventMapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
+        var result = await eventMapGrain.GetAsync();
 
-//         return Results.Ok();
-//     });
+        return Results.Ok(result);
+    });
 
+// Get the beer selection for an event.
+app.MapGet("/events/{eventId}/beers",
+    async (IGrainFactory grainFactory, int eventId) =>
+    {
+        var beerSelectionGrain = grainFactory.GetGrain<IBeerSelectionGrain>(eventId);
+        var result = await beerSelectionGrain.GetAllAsync();
 
+        return Results.Ok(result);
+    });
+
+// Get the information for a specific venue.
+app.MapGet("/events/{eventId}/venues/{venueId}",
+    async (IGrainFactory grainFactory, int eventId, string venueId) =>
+    {
+        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
+        var result = await venueGrain.GetAsync();
+
+        return Results.Ok(result);
+    });
+
+// Check-in a crawler at a venue.
 app.MapPost("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
-    async (IGrainFactory grainFactory, Guid eventId, string venueId, string crawlerId) =>
+    async (IGrainFactory grainFactory, int eventId, string venueId, string crawlerId) =>
     {
-        var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-        await crawlerGrain.CheckInAsync(eventId, venueId); 
+        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
 
-        // var eventGrain = grainFactory.GetGrain<IEventGrain>(eventId);
-        // if (await eventGrain.IsRegisteredVenueAsync(venueId))
-        // {
-        //     var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(venueId);
-        //     var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-
-        //     await venueGrain.CheckInAsync(crawlerGrain);
-
-        //     return Results.Ok();
-        // }
-
-        // return Results.BadRequest($"Venue {venueId} does not take part in this event.");
-    });
-
-// Register beer
-app.MapPost("/events/{eventId}/venues/{venueId}/beers/{beerId}",
-    async (IGrainFactory grainFactory, Guid eventId, string venueId, string beerId) =>
-    {
-        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
-        await venueGrain.RegisterBeerAsync(beerId);
+        var result = await venueGrain.TryCheckInAsync(crawlerId);
+        if (!result)
+        {
+            return Results.BadRequest($"Venue {venueId} does not take part in this event.");
+        }
 
         return Results.Ok();
     });
 
-
-// Like beer
-app.MapPost("/events/{eventId}/venues/{venueId}/beers/{beerId}/likes",
-    async (IGrainFactory grainFactory, Guid eventId, string venueId, string beerId, [FromQuery] string crawlerId) =>
+// Check-out a crawler from a venue.
+app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
+    async (IGrainFactory grainFactory, int eventId, string venueId, string crawlerId) =>
     {
-        var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
-
-        var beerGrain = grainFactory.GetGrain<IBeerGrain>(beerKey);
-        var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-
-        await beerGrain.LikeAsync(crawlerGrain);
+        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
+        await venueGrain.CheckOutAsync(crawlerId);
 
         return Results.Ok();
     });
 
-// Dislike beer
-app.MapPost("/events/{eventId}/venues/{venueId}/beers/{beerId}/dislikes",
-    async (IGrainFactory grainFactory, Guid eventId, string venueId, string beerId, [FromQuery] string crawlerId) =>
+// Rate a beer
+app.MapPut("/events/{eventId}/ratings/{crawlerId}/beers/{beerId}",
+    async (IGrainFactory grainFactory, int eventId, string crawlerId, string beerId, [FromBody] int rating) =>
     {
-        var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
-
-        var beerGrain = grainFactory.GetGrain<IBeerGrain>(beerKey);
-        var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-
-        await beerGrain.DislikeAsync(crawlerGrain);
+        var beerRatingGrain = grainFactory.GetGrain<IBeerRatingGrain>(eventId, crawlerId);
+        var result = await beerRatingGrain.TryRateAsync(beerId, rating);
+    
+        if (!result)
+        {
+            return Results.BadRequest("Beer is not available at this event.");
+        }
 
         return Results.Ok();
     });
 
-
-// app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
-//     async (IGrainFactory grainFactory, string eventId, string venueId, string crawlerId) =>
-//     {
-//         var eventGrain = grainFactory.GetGrain<IEventGrain>(eventId);
-//         if (await eventGrain.IsRegisteredVenueAsync(venueId))
-//         {
-//             var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(venueId);
-//             var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(crawlerId);
-
-//             await venueGrain.CheckOutAsync(crawlerGrain);
-//         }
-
-//         return Results.Ok();
-//     });
+// Get beer ratings
+app.MapGet("/events/{eventId}/ratings/{crawlerId}",
+    async (IGrainFactory grainFactory, int eventId, string crawlerId) =>
+    {
+        var beerRatingGrain = grainFactory.GetGrain<IBeerRatingGrain>(eventId, crawlerId);
+        var result = await beerRatingGrain.GetAllAsync();
+    
+        return Results.Ok(result);
+    });
 
 app.Run();

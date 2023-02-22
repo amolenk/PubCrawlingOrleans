@@ -1,8 +1,66 @@
 @host = localhost:5001
-@eventId = 00f03de4-040e-4e6d-988c-716fb9546d70
+@eventId = 1
 
-### Register venue
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan
+### Setup an event
+POST https://{{host}}/events/{{eventId}}
+Content-Type: application/json
+
+{
+    "beers": [
+        {
+            "id": "ijbock",
+            "name": "IJ Bock",
+            "brewery": "IJ",
+            "style": "Bock",
+            "abv": 7.5,
+            "type": "Bock",
+            "description": "IJ Bock is a dark, strong beer with a full, malty taste and a hint of caramel."
+        }
+    ],
+    "venues": [
+        {
+            "id": "herberg-jan",
+            "name": "Herberg Jan",
+            "latitude": 52.123456,
+            "longitude": 4.123456,
+            "beers": [ "ijbock" ]
+        }
+    ]
+}
+
+### Get event map
+GET https://{{host}}/events/{{eventId}}/map
+
+### Get beer selection
+GET https://{{host}}/events/{{eventId}}/beers
+
+### Get venue information
+GET https://{{host}}/events/{{eventId}}/venues/herberg-jan
+
+### Rate a beer
+PUT https://{{host}}/events/{{eventId}}/ratings/amolenk/beers/ijbock
+Content-Type: application/json
+
+1
+
+### Check-in
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
+
+### Check-out
+DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
+
+### Get beer ratings
+GET https://{{host}}/events/{{eventId}}/ratings/amolenk
+
+
+
+
+
+
+
+
+
+
 
 ### Get attendance map
 GET https://{{host}}/events/{{eventId}}/attendance

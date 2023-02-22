@@ -1,15 +1,19 @@
 using Orleans.Runtime;
 using Orleans.Utilities;
 
-public interface IDrinkingVenueGrain : IGrainWithGuidCompoundKey
+public interface IDrinkingVenueGrain : IGrainWithIntegerCompoundKey
 {
-    Task RegisterAsync();
+    Task<bool> IsRegisteredAsync();
 
-    Task RegisterBeerAsync(string beerId);
+    Task<VenueSummary> GetAsync();
 
-    Task EnterAsync(ICrawlerGrain crawler);
+    Task RegisterAsync(Venue venue);
 
-    Task LeaveAsync(ICrawlerGrain crawler);
+    // Task RegisterBeerAsync(string beerId);
+
+    Task<bool> TryCheckInAsync(string crawlerId);
+
+    Task CheckOutAsync(string crawlerId);
 
     Task ObserveAsync(IHandleVenueEvents observer);
 }
@@ -29,25 +33,36 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
         _logger = logger;
     }
 
-    public async Task RegisterAsync()
+    public Task<bool> IsRegisteredAsync()
     {
-        _state.State.IsRegistered = true;
-        await _state.WriteStateAsync();
-    }
+        var isRegistered = _state.State.VenueId.Length > 0;
 
-    public async Task RegisterBeerAsync(string beerId)
-    {
-        var eventId = this.GetPrimaryKey(out var venueId);
-
-        if (!_state.State.IsRegistered)
+        if (!isRegistered)
         {
-            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+            DeactivateOnIdle();
         }
 
-        var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
+        return Task.FromResult(isRegistered);
+    }
 
-        var beerGrain = GrainFactory.GetGrain<IBeerGrain>(beerKey);
-        await beerGrain.RegisterAsync(this);
+    public Task<VenueSummary> GetAsync()
+    {
+        var venue = new VenueSummary
+        {
+            Name = _state.State.Name,
+            Beers = _state.State.Beers.ToList()
+        };
+
+        return Task.FromResult(venue);
+    }
+
+    public async Task RegisterAsync(Venue venue)
+    {
+        _state.State.VenueId = venue.Id;
+        _state.State.Name = venue.Name;
+        _state.State.Beers = new HashSet<string>(venue.Beers);
+
+        await _state.WriteStateAsync();
     }
 
     public Task ObserveAsync(IHandleVenueEvents observer)
@@ -58,62 +73,63 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
         return Task.CompletedTask;
     }
 
-    public async Task EnterAsync(ICrawlerGrain crawler)
+    public async Task<bool> TryCheckInAsync(string crawlerId)
     {
         var eventId = this.GetPrimaryKey(out var venueId);
 
-        if (!_state.State.IsRegistered)
+        if (!IsRegistered)
         {
-            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+            DeactivateOnIdle();
+            return false;
         }
-
-        var crawlerId = crawler.GetPrimaryKeyString();
 
         if (!_state.State.Crawlers.Contains(crawlerId))
         {
             _state.State.Crawlers.Add(crawlerId);
             await _state.WriteStateAsync();
+
+           await OnNumberOfCrawlersChangedAsync();
         }
 
-        await OnNumberOfCrawlersChangedAsync();
+        return true;
     }
 
-    public async Task LeaveAsync(ICrawlerGrain crawler)
+    public async Task CheckOutAsync(string crawlerId)
     {
-        var eventId = this.GetPrimaryKey(out var venueId);
-
-        if (!_state.State.IsRegistered)
+        if (!IsRegistered)
         {
-            throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+            DeactivateOnIdle();
+            return;
         }
-
-        var crawlerId = crawler.GetPrimaryKeyString();
 
         if (_state.State.Crawlers.Contains(crawlerId))
         {
             _state.State.Crawlers.Remove(crawlerId);
             await _state.WriteStateAsync();
-        }
 
-        await OnNumberOfCrawlersChangedAsync();
+            await OnNumberOfCrawlersChangedAsync();
+        }
     }
+
+    private bool IsRegistered => _state.State.VenueId.Length > 0;
 
     private async Task OnNumberOfCrawlersChangedAsync()
     {
-        this.GetPrimaryKey(out var venueId);
+        // this.GetPrimaryKey(out var venueId);
 
-        _logger.LogInformation("🍻 There are now {Count} crawler(s) in {Venue}",
-            _state.State.Crawlers.Count,
-            venueId);
+        // _logger.LogInformation("🍻 There are now {Count} crawler(s) in {Venue}",
+        //     _state.State.Crawlers.Count,
+        //     venueId);
 
         await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(
-            venueId, _state.State.Crawlers.Count));
+            _state.State.VenueId, _state.State.Crawlers.Count));
     }
 }
 
 public class DrinkingVenueState
 {
-    public bool IsRegistered { get; set; }
+    public string VenueId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     public HashSet<string> Beers { get; set; } = new();
     public HashSet<string> Crawlers { get; set; } = new();
 }
