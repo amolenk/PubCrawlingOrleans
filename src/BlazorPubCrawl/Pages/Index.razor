@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject PubCrawlService PubCrawlService
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
@@ -37,6 +38,7 @@
     private List<string> messages = new List<string>();
     private string? userInput;
     private string? messageInput;
+    private DotNetObjectReference<Index> dotNetObjectReference;
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,28 +48,33 @@
             .WithUrl("https://localhost:5001/geohub")
             .Build();
 
-        hubConnection.On<Venue>("OnVenueUpdated", (venue) =>
+        // TODO Make sure map is rendered before calling this
+        hubConnection.On<string, int>("OnVenueAttendanceUpdated", (venueId, attendance) =>
         {
-            var encodedMsg = $"{venue.CrawlerCount} {venue.Name}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
-
-            JSRuntime.InvokeVoidAsync("updateMap", venue);
+            JSRuntime.InvokeVoidAsync("updateMarkerAttendance", venueId, attendance);
         });
 
         await hubConnection.StartAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            if (firstRender)
-            {
-                await JSRuntime.InvokeVoidAsync("initializeMap");
-            }
-            //base.OnAfterRenderAsync(firstRender);
-        }
-
+            var data = await PubCrawlService.GetVenuesAsync();
     
+            dotNetObjectReference = DotNetObjectReference.Create(this);
+
+            await JSRuntime.InvokeVoidAsync("initializeMap", data, dotNetObjectReference);
+        }
+    }    
+
+    [JSInvokable]
+    public Task OnVenueClicked(string venueId)
+    {
+        Navigation.NavigateTo($"/venues/{venueId}");
+        return Task.CompletedTask;
+    }
 
     private async Task Send()
     {
@@ -85,6 +92,11 @@
         if (hubConnection is not null)
         {
             await hubConnection.DisposeAsync();
+        }
+
+        if (dotNetObjectReference is not null)
+        {
+            dotNetObjectReference.Dispose();
         }
     }
 }

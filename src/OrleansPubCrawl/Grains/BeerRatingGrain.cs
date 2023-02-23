@@ -1,6 +1,7 @@
 using Orleans.Runtime;
 using Orleans.Utilities;
 
+// TODO BeersRatingGrain
 public interface IBeerRatingGrain : IGrainWithIntegerCompoundKey
 {
     Task<IDictionary<string, int>> GetAllAsync();
@@ -15,7 +16,7 @@ public class BeerRatingGrain : Grain, IBeerRatingGrain
 
     public BeerRatingGrain(
         [PersistentState("state")] IPersistentState<BeerRatingState> state,
-        ILogger<BeerMenuGrain> logger)
+        ILogger<BeerRatingGrain> logger)
     {
         _state = state;
         _logger = logger;

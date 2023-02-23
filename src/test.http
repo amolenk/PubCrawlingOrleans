@@ -21,18 +21,21 @@ Content-Type: application/json
         {
             "id": "herberg-jan",
             "name": "Herberg Jan",
-            "latitude": 52.123456,
-            "longitude": 4.123456,
+            "latitude": 52.6052753520511,
+            "longitude": 4.713832667723198,
             "beers": [ "ijbock" ]
         }
     ]
 }
 
-### Get event map
-GET https://{{host}}/events/{{eventId}}/map
-
 ### Get beer selection
 GET https://{{host}}/events/{{eventId}}/beers
+
+### Get beer highscores
+GET https://{{host}}/events/{{eventId}}/beers/highscores
+
+### Get venues
+GET https://{{host}}/events/{{eventId}}/venues
 
 ### Get venue information
 GET https://{{host}}/events/{{eventId}}/venues/herberg-jan
@@ -51,37 +54,3 @@ DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
 
 ### Get beer ratings
 GET https://{{host}}/events/{{eventId}}/ratings/amolenk
-
-
-
-
-
-
-
-
-
-
-
-### Get attendance map
-GET https://{{host}}/events/{{eventId}}/attendance
-
-### Check-in amolenk
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
-
-### Check-in hompus
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/mhompus
-
-### Check-out
-DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
-
-### Check-out
-DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/mhompus
-
-### Register a beer
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock
-
-### Like a beer
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock/likes?crawlerId=amolenk
-
-### Dislike a beer
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/beers/ijbock/dislikes?crawlerId=amolenk

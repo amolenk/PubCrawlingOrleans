@@ -1,5 +1,5 @@
 [GenerateSerializer]
-public class Venue
+public class Venue // TODO VenueRegistration
 {
     [Id(0)] public string Id { get; set; } = null!;
     [Id(1)] public string Name { get; set; } = null!;

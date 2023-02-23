@@ -37,6 +37,7 @@ public class EventMapGrain : Grain, IEventMapGrain, IRemindable
         _state.State.Locations[venue.Id] = new VenueLocation
         {
             Id = venue.Id,
+            Name = venue.Name,
             Latitude = venue.Latitude,
             Longitude = venue.Longitude,
         };
@@ -45,26 +46,6 @@ public class EventMapGrain : Grain, IEventMapGrain, IRemindable
 
         await StartListeningAsync();
     }
-
-    // public Task<List<VenueAttendance>> GetAttendanceAsync() =>
-    //     Task.FromResult(_state.State.VenueAttendance.ToList());
-
-    // public async Task SetVenueLocationAsync(VenueLocation venueLocation)
-    // {
-    //     _state.State.VenueAttendance.Add(new VenueAttendance
-    //     {
-    //         VenueId = venueLocation.VenueId,
-    //         Name = venueLocation.Name,
-    //         Latitude = venueLocation.Latitude,
-    //         Longitude = venueLocation.Longitude,
-    //         CrawlerCount = 0
-    //     });
-
-    //     await _state.WriteStateAsync();
-
-    //     // TODO If system restarts, we need to auto-start listening.
-    //     await StartListeningAsync();
-    // }
 
     public async Task ReceiveReminder(string reminderName, TickStatus status)
     {
@@ -92,26 +73,22 @@ public class EventMapGrain : Grain, IEventMapGrain, IRemindable
 
     async Task IHandleVenueEvents.OnNumberOfCrawlersChangedAsync(string venueId, int crawlerCount)
     {
-        _state.State.Attendance[venueId] = crawlerCount;
+        if (_state.State.Locations.TryGetValue(venueId, out var venueLocation))
+        {
+            venueLocation.Attendance = crawlerCount;
 
-        await Task.WhenAll(
-            _hubContext.Clients.All.OnVenueUpdated(new VenueAttendance // TODO Remove container object
-            {
-                Id = venueId,
-                CrawlerCount = crawlerCount
-            }),
-            _state.WriteStateAsync());
+            await Task.WhenAll(
+                _hubContext.Clients.All.OnVenueAttendanceUpdated(venueId, crawlerCount),
+                _state.WriteStateAsync());
 
-        _logger.LogInformation("UPDATED VENUE {VenueId} WITH {CrawlerCount} CRAWLERS", venueId, crawlerCount);
+            _logger.LogInformation("UPDATED VENUE {VenueId} WITH {CrawlerCount} CRAWLERS", venueId, crawlerCount);
+        }
     }
 
-        private long EventId => this.GetPrimaryKeyLong();
-
+    private long EventId => this.GetPrimaryKeyLong();
 }
 
 public class EventMapState
 {
     public Dictionary<string, VenueLocation> Locations { get; set; } = new();
-
-    public Dictionary<string, int> Attendance { get; set; } = new();
 }

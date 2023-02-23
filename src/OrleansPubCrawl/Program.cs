@@ -1,17 +1,9 @@
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Spatial;
-using Orleans.Runtime;
-using Orleans.Hosting;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
-
-// builder.Services.AddHostedService<ChangeFeedService>();
 
 builder.Services.AddResponseCompression(opts =>
 {
@@ -42,22 +34,15 @@ builder.Host.UseOrleans(siloBuilder =>
     siloBuilder.AddMemoryGrainStorage("memory");
     siloBuilder.AddMemoryGrainStorageAsDefault();
     siloBuilder.UseInMemoryReminderService();
+
+    siloBuilder.AddGrainService<AzureCosmosChangeFeedService>();
 });
 
 var app = builder.Build();
 
 app.UseResponseCompression();
 
-//app.MapHub<GeographyHub>("/geohub");
-
-// Get the list of drinking venues including attendance.
-// app.MapGet("/events/{eventId}/attendance",
-//     async (IGrainFactory grainFactory, Guid eventId) =>
-//     {
-//         var mapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
-
-//         return Results.Ok(await mapGrain.GetAttendanceAsync());
-//     });
+app.MapHub<GeographyHub>("/geohub");
 
 // Register an event.
 app.MapPost("/events/{eventId}",
@@ -81,22 +66,32 @@ app.MapPost("/events/{eventId}",
         return Results.Ok();
     });
 
-// Get the event map.
-app.MapGet("/events/{eventId}/map",
-    async (IGrainFactory grainFactory, int eventId) =>
-    {
-        var eventMapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
-        var result = await eventMapGrain.GetAsync();
-
-        return Results.Ok(result);
-    });
-
 // Get the beer selection for an event.
 app.MapGet("/events/{eventId}/beers",
     async (IGrainFactory grainFactory, int eventId) =>
     {
         var beerSelectionGrain = grainFactory.GetGrain<IBeerSelectionGrain>(eventId);
         var result = await beerSelectionGrain.GetAllAsync();
+
+        return Results.Ok(result);
+    });
+
+// Get the beer high-score list.
+app.MapGet("/events/{eventId}/beers/highscores",
+    async (IGrainFactory grainFactory, int eventId) =>
+    {
+        var beerHighScoresGrain = grainFactory.GetGrain<IBeerHighScoresGrain>(eventId);
+        var result = await beerHighScoresGrain.GetTopBeersAsync();
+
+        return Results.Ok(result);
+    });
+
+// Get the list of venues.
+app.MapGet("/events/{eventId}/venues",
+    async (IGrainFactory grainFactory, int eventId) =>
+    {
+        var eventMapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
+        var result = await eventMapGrain.GetAsync();
 
         return Results.Ok(result);
     });

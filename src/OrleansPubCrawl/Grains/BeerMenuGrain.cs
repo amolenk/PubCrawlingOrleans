@@ -1,138 +1,138 @@
-using Orleans.Runtime;
-using Orleans.Utilities;
+// using Orleans.Runtime;
+// using Orleans.Utilities;
 
-// TODO Rename to IDrinkMenuGrain
-public interface IBeerMenuGrain : IGrainWithStringKey
-{
-    Task<IEnumerable<Beer>> GetAsync();
+// // TODO Rename to IDrinkMenuGrain
+// public interface IBeerMenuGrain : IGrainWithStringKey
+// {
+//     Task<IEnumerable<Beer>> GetAsync();
 
-    Task<bool> IsAvailable(string beerId);
+//     Task<bool> IsAvailable(string beerId);
 
-    Task UpdateAsync(IEnumerable<Beer> beers);
-}
+//     Task UpdateAsync(IEnumerable<Beer> beers);
+// }
 
-public class BeerMenuGrain : Grain, IBeerMenuGrain
-{
-    private readonly IPersistentState<BeerMenuState> _state;
-    private readonly ILogger _logger;
+// public class BeerMenuGrain : Grain, IBeerMenuGrain
+// {
+//     private readonly IPersistentState<BeerMenuState> _state;
+//     private readonly ILogger _logger;
 
-    public BeerMenuGrain(
-        [PersistentState("state")] IPersistentState<BeerMenuState> state,
-        ILogger<BeerMenuGrain> logger)
-    {
-        _state = state;
-        _logger = logger;
-    }
+//     public BeerMenuGrain(
+//         [PersistentState("state")] IPersistentState<BeerMenuState> state,
+//         ILogger<BeerMenuGrain> logger)
+//     {
+//         _state = state;
+//         _logger = logger;
+//     }
 
-    public Task<IEnumerable<Beer>> GetAsync()
-    {
-        var beers = _state.State.Beers.Values.ToList();
+//     public Task<IEnumerable<Beer>> GetAsync()
+//     {
+//         var beers = _state.State.Beers.Values.ToList();
 
-        // If there are no beers, deactivate the grain.
-        if (beers.Count == 0)
-        {
-            DeactivateOnIdle();
-        }
+//         // If there are no beers, deactivate the grain.
+//         if (beers.Count == 0)
+//         {
+//             DeactivateOnIdle();
+//         }
 
-        return Task.FromResult<IEnumerable<Beer>>(beers);
-    }
+//         return Task.FromResult<IEnumerable<Beer>>(beers);
+//     }
 
-    public Task<bool> IsAvailable(string beerId)
-    {
-        var isAvailable = _state.State.Beers.ContainsKey(beerId);
+//     public Task<bool> IsAvailable(string beerId)
+//     {
+//         var isAvailable = _state.State.Beers.ContainsKey(beerId);
 
-        if (!isAvailable)
-        {
-            DeactivateOnIdle();
-        }
+//         if (!isAvailable)
+//         {
+//             DeactivateOnIdle();
+//         }
 
-        return Task.FromResult(isAvailable);
-    }
+//         return Task.FromResult(isAvailable);
+//     }
 
-    public async Task UpdateAsync(IEnumerable<Beer> beers)
-    {
-        _state.State.Beers = beers.ToDictionary(b => b.Id);
+//     public async Task UpdateAsync(IEnumerable<Beer> beers)
+//     {
+//         _state.State.Beers = beers.ToDictionary(b => b.Id);
 
-        await _state.WriteStateAsync();
-    }
+//         await _state.WriteStateAsync();
+//     }
 
-    // public async Task RegisterBeerAsync(string beerId)
-    // {
-    //     // var eventId = this.GetPrimaryKey(out var venueId);
+//     // public async Task RegisterBeerAsync(string beerId)
+//     // {
+//     //     // var eventId = this.GetPrimaryKey(out var venueId);
 
-    //     // if (!_state.State.IsRegistered)
-    //     // {
-    //     //     throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
-    //     // }
+//     //     // if (!_state.State.IsRegistered)
+//     //     // {
+//     //     //     throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+//     //     // }
 
-    //     // var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
+//     //     // var beerKey = BeerGrain.GetKey(eventId, venueId, beerId);
 
-    //     // var beerGrain = GrainFactory.GetGrain<IBeerGrain>(beerKey);
-    //     // await beerGrain.RegisterAsync(this);
-    // }
+//     //     // var beerGrain = GrainFactory.GetGrain<IBeerGrain>(beerKey);
+//     //     // await beerGrain.RegisterAsync(this);
+//     // }
 
-    // public Task ObserveAsync(IHandleVenueEvents observer)
-    // {
-    //     // TODO check what the parameters mean
-    //     _observerManager.Subscribe(observer, observer);
+//     // public Task ObserveAsync(IHandleVenueEvents observer)
+//     // {
+//     //     // TODO check what the parameters mean
+//     //     _observerManager.Subscribe(observer, observer);
 
-    //     return Task.CompletedTask;
-    // }
+//     //     return Task.CompletedTask;
+//     // }
 
-    // public async Task EnterAsync(ICrawlerGrain crawler)
-    // {
-    //     var eventId = this.GetPrimaryKey(out var venueId);
+//     // public async Task EnterAsync(ICrawlerGrain crawler)
+//     // {
+//     //     var eventId = this.GetPrimaryKey(out var venueId);
 
-    //     if (!_state.State.IsRegistered)
-    //     {
-    //         throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
-    //     }
+//     //     if (!_state.State.IsRegistered)
+//     //     {
+//     //         throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+//     //     }
 
-    //     var crawlerId = crawler.GetPrimaryKeyString();
+//     //     var crawlerId = crawler.GetPrimaryKeyString();
 
-    //     if (!_state.State.Crawlers.Contains(crawlerId))
-    //     {
-    //         _state.State.Crawlers.Add(crawlerId);
-    //         await _state.WriteStateAsync();
-    //     }
+//     //     if (!_state.State.Crawlers.Contains(crawlerId))
+//     //     {
+//     //         _state.State.Crawlers.Add(crawlerId);
+//     //         await _state.WriteStateAsync();
+//     //     }
 
-    //     await OnNumberOfCrawlersChangedAsync();
-    // }
+//     //     await OnNumberOfCrawlersChangedAsync();
+//     // }
 
-    // public async Task LeaveAsync(ICrawlerGrain crawler)
-    // {
-    //     var eventId = this.GetPrimaryKey(out var venueId);
+//     // public async Task LeaveAsync(ICrawlerGrain crawler)
+//     // {
+//     //     var eventId = this.GetPrimaryKey(out var venueId);
 
-    //     if (!_state.State.IsRegistered)
-    //     {
-    //         throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
-    //     }
+//     //     if (!_state.State.IsRegistered)
+//     //     {
+//     //         throw new BadHttpRequestException($"Venue {venueId} does not participate in event {eventId}.");
+//     //     }
 
-    //     var crawlerId = crawler.GetPrimaryKeyString();
+//     //     var crawlerId = crawler.GetPrimaryKeyString();
 
-    //     if (_state.State.Crawlers.Contains(crawlerId))
-    //     {
-    //         _state.State.Crawlers.Remove(crawlerId);
-    //         await _state.WriteStateAsync();
-    //     }
+//     //     if (_state.State.Crawlers.Contains(crawlerId))
+//     //     {
+//     //         _state.State.Crawlers.Remove(crawlerId);
+//     //         await _state.WriteStateAsync();
+//     //     }
 
-    //     await OnNumberOfCrawlersChangedAsync();
-    // }
+//     //     await OnNumberOfCrawlersChangedAsync();
+//     // }
 
-    // private async Task OnNumberOfCrawlersChangedAsync()
-    // {
-    //     this.GetPrimaryKey(out var venueId);
+//     // private async Task OnNumberOfCrawlersChangedAsync()
+//     // {
+//     //     this.GetPrimaryKey(out var venueId);
 
-    //     _logger.LogInformation("🍻 There are now {Count} crawler(s) in {Venue}",
-    //         _state.State.Crawlers.Count,
-    //         venueId);
+//     //     _logger.LogInformation("🍻 There are now {Count} crawler(s) in {Venue}",
+//     //         _state.State.Crawlers.Count,
+//     //         venueId);
 
-    //     await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(
-    //         venueId, _state.State.Crawlers.Count));
-    // }
-}
+//     //     await _observerManager.Notify(obs => obs.OnNumberOfCrawlersChangedAsync(
+//     //         venueId, _state.State.Crawlers.Count));
+//     // }
+// }
 
-public class BeerMenuState
-{
-    public Dictionary<string, Beer> Beers { get; set; } = new();
-}
+// public class BeerMenuState
+// {
+//     public Dictionary<string, Beer> Beers { get; set; } = new();
+// }

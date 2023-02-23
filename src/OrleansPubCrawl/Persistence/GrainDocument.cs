@@ -5,9 +5,6 @@ public class GrainDocument
     [JsonProperty("id")]
     public string Id { get; set; } = null!;
 
-    [JsonProperty("grainType")]
-    public string GrainType { get; set; } = null!;
-
     [JsonProperty("grainId")]
     public string GrainId { get; set; } = null!;
 

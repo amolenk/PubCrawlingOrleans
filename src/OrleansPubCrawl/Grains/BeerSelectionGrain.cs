@@ -12,12 +12,12 @@ public interface IBeerSelectionGrain : IGrainWithIntegerKey
 
 public class BeerSelectionGrain : Grain, IBeerSelectionGrain
 {
-    private readonly IPersistentState<BeerMenuState> _state;
+    private readonly IPersistentState<BeerSelectionState> _state;
     private readonly ILogger _logger;
 
     public BeerSelectionGrain(
-        [PersistentState("state")] IPersistentState<BeerMenuState> state,
-        ILogger<BeerMenuGrain> logger)
+        [PersistentState("state")] IPersistentState<BeerSelectionState> state,
+        ILogger<BeerSelectionGrain> logger)
     {
         _state = state;
         _logger = logger;

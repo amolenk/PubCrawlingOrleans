@@ -71,6 +71,8 @@ public class AzureCosmosGrainStorage : IGrainStorage, ILifecycleParticipant<ISil
 
     public async Task WriteStateAsync<T>(string grainType, GrainId grainId, IGrainState<T> grainState)
     {
+        Console.WriteLine("WRITING STATE: " + grainId.ToString() + " (" + grainType + ")");
+
         try
         {
             var documentId = GetDocumentId(grainId);
@@ -84,8 +86,7 @@ public class AzureCosmosGrainStorage : IGrainStorage, ILifecycleParticipant<ISil
             var grainDocument = new GrainDocument
             {
                 Id = documentId,
-                GrainType = grainType,
-                GrainId = grainId.Key.ToString(),
+                GrainId = grainId.ToString(),
                 State = state
             };
 
