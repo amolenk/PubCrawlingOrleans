@@ -7,30 +7,15 @@
 
 <PageTitle>Index</PageTitle>
 
- <div id="map" style="height: 750px; width: 100%; background-color: red;"></div>
+<div class="container">
+    <h1>[Event Name]</h1>
 
-<div class="form-group">
-    <label>
-        User:
-        <input @bind="userInput" />
-    </label>
+     <div id="map"></div>
 </div>
-<div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
+
+<div class="container">
+    <h1>Top Beers 🍻</h1>
 </div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
-
-<hr>
-
-<ul id="messagesList">
-    @foreach (var message in messages)
-    {
-        <li>@message</li>
-    }
-</ul>
 
 
 @code {

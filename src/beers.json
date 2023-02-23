@@ -1,132 +1,143 @@
-[
-  {
-    "name": "Pliny the Elder",
-    "type": "Double IPA",
-    "description": "An intense and hoppy brew with a citrus and pine aroma."
-  },
-  {
-    "name": "Heady Topper",
-    "type": "Double IPA",
-    "description": "A hazy and unfiltered beer with a juicy, tropical fruit flavor."
-  },
-  {
-    "name": "Bourbon County Brand Stout",
-    "type": "Imperial Stout",
-    "description": "A rich and boozy beer aged in bourbon barrels with notes of chocolate and vanilla."
-  },
-  {
-    "name": "Dark Lord",
-    "type": "Russian Imperial Stout",
-    "description": "A complex and intense brew with flavors of roasted malt, coffee, and dark fruit."
-  },
-  {
-    "name": "Hopslam",
-    "type": "Double IPA",
-    "description": "A highly hopped beer with a sweet honey malt balance and a grapefruit finish."
-  },
-  {
-    "name": "KBS",
-    "type": "Imperial Stout",
-    "description": "A smooth and silky beer with flavors of coffee, chocolate, and bourbon."
-  },
-  {
-    "name": "Fou' Foune",
-    "type": "Lambic",
-    "description": "A sour and fruity beer with a peach flavor and a dry finish."
-  },
-  {
-    "name": "Cantillon Gueuze",
-    "type": "Lambic",
-    "description": "A complex and funky beer with a sour and tart taste and a champagne-like effervescence."
-  },
-  {
-    "name": "Westvleteren 12",
-    "type": "Quadrupel",
-    "description": "A rich and fruity beer with a malty sweetness and a warming alcohol finish."
-  },
-  {
-    "name": "Trappist Rochefort 10",
-    "type": "Quadrupel",
-    "description": "A deep and complex beer with notes of dark fruit, caramel, and chocolate."
-  },
-  {
-    "name": "Pliny the Younger",
-    "type": "Triple IPA",
-    "description": "A massively hopped beer with a tropical fruit flavor and a piney bitterness."
-  },
-  {
-    "name": "Sculpin IPA",
-    "type": "American IPA",
-    "description": "A hoppy and citrusy beer with a crisp and clean finish."
-  },
-  {
-    "name": "Weihenstephaner Hefeweissbier",
-    "type": "Hefeweizen",
-    "description": "A light and refreshing beer with flavors of banana and clove and a creamy mouthfeel."
-  },
-  {
-    "name": "Orval",
-    "type": "Trappist Ale",
-    "description": "A complex and spicy beer with a dry finish and a Brettanomyces funkiness."
-  },
-  {
-    "name": "La Fin Du Monde",
-    "type": "Tripel",
-    "description": "A smooth and balanced beer with flavors of fruit, spice, and a hint of sweetness."
-  },
-  {
-    "name": "Duvel",
-    "type": "Belgian Strong Ale",
-    "description": "A golden and effervescent beer with a dry and bitter finish."
-  },
-  {
-    "name": "Emelisse Triple IPA",
-    "type": "Triple IPA",
-    "description": "A bold and bitter beer with a fruity hop aroma and a high alcohol content."
-  },
-  {
-    "name": "Brouwerij 't IJ IPA",
-    "type": "American IPA",
-    "description": "A hoppy and refreshing beer with a citrusy and piney aroma and a crisp finish."
-  },
-  {
-    "name": "De Molen Rasputin",
-    "type": "Russian Imperial Stout",
-    "description": "A complex and flavorful beer with notes of chocolate, coffee, and dark fruit."
-  },
-  {
-    "name": "Jopen Mooie Nel IPA",
-    "type": "American IPA",
-    "description": "A well-balanced and smooth IPA with a tropical fruit aroma and a bitter finish."
-  },
-  {
-    "name": "Gebrouwen door Vrouwen Gluiperd",
-    "type": "Double IPA",
-    "description": "A hoppy and full-bodied beer with a floral and fruity aroma and a lingering bitterness."
-  },
-  {
-    "name": "Kaapse Brouwers Karel",
-    "type": "Imperial Stout",
-    "description": "A rich and full-bodied beer with a roasted malt character and a smooth finish."
-  },
-  {
-    "name": "Baxbier Kon Minder",
-    "type": "Session IPA",
-    "description": "A light and refreshing beer with a fruity hop aroma and a low alcohol content."
-  },
-  {
-    "name": "Oedipus Mannenliefde",
-    "type": "Saison",
-    "description": "A spicy and fruity beer with a dry and refreshing finish."
-  },
-  {
-    "name": "Bierbrouwerij De Koningshoeven Quadrupel",
-    "type": "Quadrupel",
-    "description": "A rich and complex beer with a malty sweetness and a warming alcohol finish."
-  },
-  {
-    "name": "Dutch Bargain Imperial Stout",
-    "type": "Imperial Stout",
-    "description": "A smooth and velvety beer with notes of chocolate, coffee, and caramel."
-  }
-]
+{
+  "beers": [
+    {
+      "id": "jopen-adriaan",
+      "name": "Adriaan",
+      "brewery": "Jopen",
+      "style": "Belgian Witbier",
+      "abv": 5.0,
+      "description": "A refreshing and fruity Belgian-style witbier with notes of coriander and orange peel."
+    },
+    {
+      "id": "la-chouffe",
+      "name": "La Chouffe",
+      "brewery": "Brasserie d'Achouffe",
+      "style": "Belgian Blonde Ale",
+      "abv": 8.0,
+      "description": "A strong and spicy Belgian blonde ale with a fruity and yeasty character."
+    },
+    {
+      "id": "texels-skuumkoppe",
+      "name": "Skuumkoppe",
+      "brewery": "Texelse Bierbrouwerij",
+      "style": "Dunkelweizen",
+      "abv": 6.0,
+      "description": "A dark and malty wheat beer with a smooth and slightly sweet taste."
+    },
+    {
+      "id": "brouwerij-t-ij-ijwit",
+      "name": "IJwit",
+      "brewery": "Brouwerij 't IJ",
+      "style": "Belgian Witbier",
+      "abv": 6.5,
+      "description": "A classic Belgian-style witbier with a spicy and citrusy flavor and a hazy appearance."
+    },
+    {
+      "id": "westmalle-tripel",
+      "name": "Tripel",
+      "brewery": "Brouwerij Westmalle",
+      "style": "Belgian Tripel",
+      "abv": 9.5,
+      "description": "A complex and full-bodied Belgian tripel with a sweet and spicy taste and a dry finish."
+    },
+    {
+      "id": "oud-beersel-oude-geuze",
+      "name": "Oude Geuze",
+      "brewery": "Brouwerij Oud Beersel",
+      "style": "Lambic - Gueuze",
+      "abv": 6.0,
+      "description": "A tart and funky lambic beer with a dry and acidic finish, made by blending young and old beers."
+    },
+    {
+      "id": "hertog-jan-dubbel",
+      "name": "Dubbel",
+      "brewery": "Hertog Jan",
+      "style": "Belgian Dubbel",
+      "abv": 7.3,
+      "description": "A dark and rich Belgian-style dubbel with flavors of dark fruit, caramel, and spices."
+    },
+    {
+      "id": "brouwerij-troost-west-bok",
+      "name": "West-Bok",
+      "brewery": "Brouwerij Troost",
+      "style": "Bock",
+      "abv": 6.5,
+      "description": "A smooth and malty bock beer with a caramel flavor and a hint of bitterness."
+    },
+    {
+      "id": "ommegang-abbey-ale",
+      "name": "Ommegang Abbey Ale",
+      "brewery": "Brouwerij Ommegang",
+      "style": "Belgian Dubbel",
+      "abv": 8.5,
+      "description": "A rich and complex Belgian-style dubbel with notes of dark fruit, chocolate, and spice."
+    },
+    {
+      "id": "rodenbach-grand-cru",
+      "name": "Grand Cru",
+      "brewery": "Rodenbach",
+      "style": "Flanders Red Ale",
+      "abv": 6.0,
+      "description": "A sour and fruity Flanders red ale with a blend of young and aged beer for a complex and balanced flavor."
+    },
+    {
+      "id": "brouwerij-troost-oost-bok",
+      "name": "Oost-Bok",
+      "brewery": "Brouwerij Troost",
+      "style": "Bock",
+      "abv": 7.0,
+      "description": "A full-bodied and malty bock beer with flavors of caramel, toffee, and dried fruit."
+    },
+    {
+      "id": "brouwerij-de-molen-hamer-en-sikkel",
+      "name": "Hamer en Sikkel",
+      "brewery": "Brouwerij De Molen",
+      "style": "Russian Imperial Stout",
+      "abv": 10.4,
+      "description": "A rich and robust Russian imperial stout with a dark chocolate and coffee flavor and a warming alcohol finish."
+    },
+    {
+      "id": "kasteel-tripel",
+      "name": "Kasteel Tripel",
+      "brewery": "Brouwerij Van Honsebrouck",
+      "style": "Belgian Tripel",
+      "abv": 11.0,
+      "description": "A strong and sweet Belgian-style tripel with a fruity and floral aroma and a warming alcohol finish."
+    },
+    {
+      "id": "de-dochter-van-de-korenaar-extase",
+      "name": "Extase",
+      "brewery": "Brouwerij De Dochter van de Korenaar",
+      "style": "Belgian Strong Ale",
+      "abv": 7.5,
+      "description": "A complex and balanced Belgian-style strong ale with flavors of caramel, dark fruit, and spices."
+    },
+    {
+      "id": "texels-springtij",
+      "name": "Springtij",
+      "brewery": "Texelse Bierbrouwerij",
+      "style": "Bock",
+      "abv": 7.2,
+      "description": "A smooth and malty bock beer with a rich caramel flavor and a subtle hop bitterness."
+    },
+    {
+      "id": "brouwerij-t-ij-nat",
+      "name": "Nat",
+      "brewery": "Brouwerij 't IJ",
+      "style": "Belgian Dubbel",
+      "abv": 6.5,
+      "description": "A traditional Belgian-style dubbel with a rich and malty flavor and a subtle spice and fruit character."
+    }
+  ],
+  "venues": [
+    {
+      "id": "herberg-jan",
+      "name": "Herberg Jan",
+      "latitude": 52.6052753520511,
+      "longitude": 4.713832667723198,
+      "beers": [
+        "ijbock"
+      ]
+    }
+  ]
+}

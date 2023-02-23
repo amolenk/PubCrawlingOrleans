@@ -5,4 +5,5 @@ public record Venue(
     string Name,
     double Latitude,
     double Longitude,
-    int Attendance);
+    int Attendance,
+    List<string> Beers);

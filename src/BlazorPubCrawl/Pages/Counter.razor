@@ -1,21 +1,52 @@
 ﻿@page "/venues/{VenueId}"
+@inject PubCrawlService PubCrawlService
 
-<PageTitle>Counter</PageTitle>
+<div class="container">
+    <h1>@_venueName</h1>
 
-<h1>Venue: @VenueId</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+    <ul class="beer-list">
+        @foreach (var beer in _beers)
+        {
+            <li class="beer-item">
+                <div class="beer-name">@beer.Name</div>
+                <div class="beer-rating">@(_ratings.ContainsKey(beer.Id) ? _ratings[beer.Id] : 0)</div>
+                <div>
+                    <button class="btn" @onclick="LikeAsync">👍</button>
+                    <button class="btn" @onclick="DislikeAsync">👎</button>
+                </div>
+            </li>
+        }
+    </ul>
+</div>
 
 @code {
-    private int currentCount = 0;
+    private string _venueName = string.Empty;
+    private List<Beer> _beers = new();
+    private Dictionary<string, int> _ratings = new();
 
     [Parameter]
-    public string VenueId { get; set; } //= string.Empty;
+    public string VenueId { get; set; } = string.Empty;
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        var venue = await PubCrawlService.GetVenueAsync(VenueId);
+
+        var beers = (await PubCrawlService.GetBeerSelectionAsync())
+            .ToDictionary(b => b.Id);
+
+        _ratings = await PubCrawlService.GetBeerRatingsAsync();
+
+        _venueName = venue.Name;
+        _beers = venue.Beers.Select(b => beers[b]).ToList();
+    } 
+
+    public Task LikeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task DislikeAsync()
+    {
+        return Task.CompletedTask;
     }
 }

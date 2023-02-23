@@ -35,7 +35,7 @@ builder.Host.UseOrleans(siloBuilder =>
     siloBuilder.AddMemoryGrainStorageAsDefault();
     siloBuilder.UseInMemoryReminderService();
 
-    siloBuilder.AddGrainService<AzureCosmosChangeFeedService>();
+    // siloBuilder.AddGrainService<AzureCosmosChangeFeedService>();
 });
 
 var app = builder.Build();
