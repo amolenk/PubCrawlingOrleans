@@ -1,7 +1,7 @@
 using Orleans.Runtime;
 using Orleans.Utilities;
 
-// TODO BeersRatingGrain
+// TODO BeerRatingsGrain
 public interface IBeerRatingGrain : IGrainWithIntegerCompoundKey
 {
     Task<IDictionary<string, int>> GetAllAsync();

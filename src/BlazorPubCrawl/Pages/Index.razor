@@ -5,10 +5,10 @@
 @inject PubCrawlService PubCrawlService
 @implements IAsyncDisposable
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Pub Crawl</PageTitle>
 
 <div class="container">
-    <h1>[Event Name]</h1>
+    <h1>Pub Crawl! 🗺️</h1>
 
      <div id="map"></div>
 </div>
@@ -47,7 +47,7 @@
         if (firstRender)
         {
             var data = await PubCrawlService.GetVenuesAsync();
-    
+
             dotNetObjectReference = DotNetObjectReference.Create(this);
 
             await JSRuntime.InvokeVoidAsync("initializeMap", data, dotNetObjectReference);

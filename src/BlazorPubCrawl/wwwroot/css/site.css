@@ -42,6 +42,7 @@ a, .btn-link {
 .beer-list {
     list-style-type: none;
     margin: 0;
+    margin-top: 1.5rem;
     padding: 0;
     width: 100%;
 }
@@ -52,20 +53,28 @@ a, .btn-link {
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem;
-    border-bottom: 1px solid #d3d3d3;
+    border-top: 1px solid #d3d3d3;
 }
 
-.beer-name {
+.beer-info {
     font-size: 1.5rem;
     color: #7b4d34;
     text-shadow: 0.1rem 0.1rem #d3d3d3;
+    max-width: 500px;
 }
 
-.beer-rating {
-    font-size: 1.5rem;
+.beer-info h4 {
+    font-size: 1.2rem;
     font-weight: bold;
-    color: #7b4d34;
-    text-shadow: 0.1rem 0.1rem #d3d3d3;
+}
+
+.beer-info p {
+    font-size: 1.2rem;
+}
+
+.beer-info span {
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
 .btn {
@@ -84,15 +93,23 @@ a, .btn-link {
     cursor: pointer;
 }
 
-.btn-primary {
+.selected {
+    background-color: #dc6926;
+}
+
+.selected:hover {
+    background-color: #7b4d34;
+}
+
+/* .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
     border-color: #1861ac;
-}
+} */
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+/* .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
+} */
 
 .content {
     padding-top: 1.1rem;

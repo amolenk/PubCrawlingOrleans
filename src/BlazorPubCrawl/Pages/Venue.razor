@@ -1,0 +1,93 @@
+﻿@page "/venues/{VenueId}"
+@inject PubCrawlService PubCrawlService
+@inject NavigationManager Navigation
+
+<div class="container">
+    <h1>@_venueName</h1>
+
+    @if (_isCheckedIn)
+    {
+        <button class="selected btn" @onclick="CheckOutAsync">Check Out 👋</button>
+    }
+    else
+    {
+        <button class="btn" @onclick="CheckInAsync">Check In 🙋</button>
+    }
+
+    <ul class="beer-list">
+        @foreach (var beer in _beers)
+        {
+            <li class="beer-item">
+                <div class="beer-info">
+                    <h4>@beer.Brewery</h4>
+                    <h2>@beer.Name <span>@(beer.Abv)%</span></h2>
+                    <p>@beer.Description</p>
+                </div>
+                <div>
+                    <button class="btn @(_ratings[beer.Id] > 0 ? "selected" : "")" @onclick="() => LikeAsync(beer.Id)">👍</button>
+                    <button class="btn @(_ratings[beer.Id] < 0 ? "selected" : "")" @onclick="() => DislikeAsync(beer.Id)">👎</button>
+                </div>
+            </li>
+        }
+    </ul>
+
+</div>
+
+
+
+                @* <div class="beer-rating">@(_ratings.ContainsKey(beer.Id) ? _ratings[beer.Id] : 0)</div> *@
+
+@code {
+    private string _venueName = string.Empty;
+    private bool _isCheckedIn;
+    private List<Beer> _beers = new();
+    private Dictionary<string, int> _ratings = new();
+
+    [Parameter]
+    public string VenueId { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var venue = await PubCrawlService.GetVenueAsync(VenueId);
+
+        var beers = (await PubCrawlService.GetBeerSelectionAsync())
+            .ToDictionary(b => b.Id);
+
+        _venueName = venue.Name;
+        _isCheckedIn = venue.IsCheckedIn;
+        _ratings = venue.Beers;
+        _beers = venue.Beers.Select(b => beers[b.Key]).ToList();
+    } 
+
+    public async Task CheckInAsync()
+    {
+        await PubCrawlService.CheckInAsync(VenueId);
+        _isCheckedIn = true;
+    }
+
+    public async Task CheckOutAsync()
+    {
+        await PubCrawlService.CheckOutAsync(VenueId);
+        _isCheckedIn = false;
+
+        Navigation.NavigateTo("/");
+    }
+
+    public async Task LikeAsync(string beerId)
+    {
+        var currentRating = _ratings.ContainsKey(beerId) ? _ratings[beerId] : 0;
+        var newRating = currentRating == 1 ? 0 : 1;
+        await PubCrawlService.RateBeerAsync(beerId, newRating);
+
+        _ratings[beerId] = newRating;
+    }
+
+    public async Task DislikeAsync(string beerId)
+    {
+        var currentRating = _ratings.ContainsKey(beerId) ? _ratings[beerId] : 0;
+        var newRating = currentRating == -1 ? 0 : -1;
+        await PubCrawlService.RateBeerAsync(beerId, newRating);
+
+        _ratings[beerId] = newRating;
+    }
+}

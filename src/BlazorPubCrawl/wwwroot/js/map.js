@@ -8,6 +8,8 @@ var markers = [];
 // Shows the map and draws markers for the venues.
 function initializeMap(venues, pageRef) {
 
+    markers = [];
+
     var map = new ol.Map({
         target: 'map',
         layers: [

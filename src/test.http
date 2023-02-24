@@ -96,14 +96,6 @@ Content-Type: application/json
       "description": "A full-bodied and malty bock beer with flavors of caramel, toffee, and dried fruit."
     },
     {
-      "id": "brouwerij-de-molen-hamer-en-sikkel",
-      "name": "Hamer en Sikkel",
-      "brewery": "Brouwerij De Molen",
-      "style": "Russian Imperial Stout",
-      "abv": 10.4,
-      "description": "A rich and robust Russian imperial stout with a dark chocolate and coffee flavor and a warming alcohol finish."
-    },
-    {
       "id": "kasteel-tripel",
       "name": "Kasteel Tripel",
       "brewery": "Brouwerij Van Honsebrouck",
@@ -142,7 +134,7 @@ Content-Type: application/json
       "name": "Herberg Jan",
       "latitude": 52.6052753520511,
       "longitude": 4.713832667723198,
-      "beers": [ "kasteel-tripel", "brouwerij-t-ij-nat", "brouwerij-de-molen-hamer-en-sikkel", "texels-springtij" ]
+      "beers": [ "kasteel-tripel", "brouwerij-t-ij-nat", "texels-springtij" ]
     },
     {
       "id": "fletcher",
@@ -186,18 +178,23 @@ GET https://{{host}}/events/{{eventId}}/venues
 
 ### Get venue information
 GET https://{{host}}/events/{{eventId}}/venues/herberg-jan
+CrawlerId: amolenk
 
 ### Rate a beer
-PUT https://{{host}}/events/{{eventId}}/ratings/amolenk/beers/ijbock
+PUT https://{{host}}/events/{{eventId}}/ratings/kasteel-tripel
 Content-Type: application/json
+CrawlerId: amolenk
 
--1
+1
 
 ### Check-in
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
+POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers
+CrawlerId: amolenk
 
 ### Check-out
-DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers/amolenk
+DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers
+CrawlerId: amolenk
 
 ### Get beer ratings
-GET https://{{host}}/events/{{eventId}}/ratings/amolenk
+GET https://{{host}}/events/{{eventId}}/ratings
+CrawlerId: amolenk

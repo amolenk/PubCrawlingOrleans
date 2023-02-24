@@ -98,17 +98,17 @@ app.MapGet("/events/{eventId}/venues",
 
 // Get the information for a specific venue.
 app.MapGet("/events/{eventId}/venues/{venueId}",
-    async (IGrainFactory grainFactory, int eventId, string venueId) =>
+    async (IGrainFactory grainFactory, int eventId, string venueId, [FromHeader] string crawlerId) =>
     {
         var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
-        var result = await venueGrain.GetAsync();
+        var result = await venueGrain.GetAsync(crawlerId);
 
         return Results.Ok(result);
     });
 
 // Check-in a crawler at a venue.
-app.MapPost("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
-    async (IGrainFactory grainFactory, int eventId, string venueId, string crawlerId) =>
+app.MapPost("/events/{eventId}/venues/{venueId}/crawlers",
+    async (IGrainFactory grainFactory, int eventId, string venueId, [FromHeader] string crawlerId) =>
     {
         var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
 
@@ -122,8 +122,8 @@ app.MapPost("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
     });
 
 // Check-out a crawler from a venue.
-app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
-    async (IGrainFactory grainFactory, int eventId, string venueId, string crawlerId) =>
+app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers/",
+    async (IGrainFactory grainFactory, int eventId, string venueId, [FromHeader] string crawlerId) =>
     {
         var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
         await venueGrain.CheckOutAsync(crawlerId);
@@ -132,8 +132,8 @@ app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers/{crawlerId}",
     });
 
 // Rate a beer
-app.MapPut("/events/{eventId}/ratings/{crawlerId}/beers/{beerId}",
-    async (IGrainFactory grainFactory, int eventId, string crawlerId, string beerId, [FromBody] int rating) =>
+app.MapPut("/events/{eventId}/ratings/{beerId}",
+    async (IGrainFactory grainFactory, int eventId, string beerId, [FromHeader] string crawlerId, [FromBody] int rating) =>
     {
         var beerRatingGrain = grainFactory.GetGrain<IBeerRatingGrain>(eventId, crawlerId);
         var result = await beerRatingGrain.TryRateAsync(beerId, rating);
@@ -147,8 +147,8 @@ app.MapPut("/events/{eventId}/ratings/{crawlerId}/beers/{beerId}",
     });
 
 // Get beer ratings
-app.MapGet("/events/{eventId}/ratings/{crawlerId}",
-    async (IGrainFactory grainFactory, int eventId, string crawlerId) =>
+app.MapGet("/events/{eventId}/ratings",
+    async (IGrainFactory grainFactory, int eventId, [FromHeader] string crawlerId) =>
     {
         var beerRatingGrain = grainFactory.GetGrain<IBeerRatingGrain>(eventId, crawlerId);
         var result = await beerRatingGrain.GetAllAsync();

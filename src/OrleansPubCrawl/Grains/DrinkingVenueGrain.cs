@@ -5,11 +5,9 @@ public interface IDrinkingVenueGrain : IGrainWithIntegerCompoundKey
 {
     Task<bool> IsRegisteredAsync();
 
-    Task<VenueSummary> GetAsync();
+    Task<VenueSummary> GetAsync(string crawlerId);
 
     Task RegisterAsync(Venue venue);
-
-    // Task RegisterBeerAsync(string beerId);
 
     Task<bool> TryCheckInAsync(string crawlerId);
 
@@ -45,15 +43,20 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
         return Task.FromResult(isRegistered);
     }
 
-    public Task<VenueSummary> GetAsync()
+    public async Task<VenueSummary> GetAsync(string crawlerId)
     {
-        var venue = new VenueSummary
+        var eventId = this.GetPrimaryKeyLong();
+        var beerRatingsGrain = GrainFactory.GetGrain<IBeerRatingGrain>(eventId, crawlerId, null);
+        var ratings = await beerRatingsGrain.GetAllAsync();
+
+        return new VenueSummary
         {
             Name = _state.State.Name,
-            Beers = _state.State.Beers.ToList()
+            IsCheckedIn = _state.State.Crawlers.Contains(crawlerId),
+            Beers = _state.State.Beers.ToDictionary(
+                b => b,
+                b => ratings.ContainsKey(b) ? ratings[b] : 0)
         };
-
-        return Task.FromResult(venue);
     }
 
     public async Task RegisterAsync(Venue venue)
