@@ -23,7 +23,7 @@
     private List<string> messages = new List<string>();
     private string? userInput;
     private string? messageInput;
-    private DotNetObjectReference<Index> dotNetObjectReference;
+    private DotNetObjectReference<Index>? dotNetObjectReference;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,9 +48,12 @@
         {
             var data = await PubCrawlService.GetVenuesAsync();
 
-            dotNetObjectReference = DotNetObjectReference.Create(this);
+            if (data.Any())
+            {
+                dotNetObjectReference = DotNetObjectReference.Create(this);
 
-            await JSRuntime.InvokeVoidAsync("initializeMap", data, dotNetObjectReference);
+                await JSRuntime.InvokeVoidAsync("initializeMap", data, dotNetObjectReference);
+            }
         }
     }    
 

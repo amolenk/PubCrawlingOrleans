@@ -1,20 +1,21 @@
 using Orleans.Runtime;
 
-public interface IBeerHighScoresGrain : IGrainWithIntegerKey
+// TODO Leaderboard
+public interface IBeerLeaderboardGrain : IGrainWithIntegerKey
 {
     Task<Dictionary<string, int>> GetTopBeersAsync();
 
     Task UpdateScoreAsync(string beerId, int score);
 }
 
-public class BeerHighScoresGrain : Grain, IBeerHighScoresGrain
+public class BeerLeaderboardGrain : Grain, IBeerLeaderboardGrain
 {
-    private readonly IPersistentState<BeerHighScoreState> _state;
+    private readonly IPersistentState<BeerLeaderboardState> _state;
     private readonly ILogger _logger;
 
-    public BeerHighScoresGrain(
-        [PersistentState("state")] IPersistentState<BeerHighScoreState> state,
-        ILogger<BeerHighScoresGrain> logger)
+    public BeerLeaderboardGrain(
+        [PersistentState("state")] IPersistentState<BeerLeaderboardState> state,
+        ILogger<BeerLeaderboardGrain> logger)
     {
         _state = state;
         _logger = logger;
@@ -30,8 +31,6 @@ public class BeerHighScoresGrain : Grain, IBeerHighScoresGrain
 
     public async Task UpdateScoreAsync(string beerId, int score)
     {
-        _logger.LogInformation("Updating score for beer {BeerId} to {Score}", beerId, score);
-
         if (_state.State.Scores.ContainsKey(beerId) &&
             _state.State.Scores[beerId] == score)
         {
@@ -44,7 +43,7 @@ public class BeerHighScoresGrain : Grain, IBeerHighScoresGrain
     }
 }
 
-public class BeerHighScoreState
+public class BeerLeaderboardState
 {
     public Dictionary<string, int> Scores { get; set; } = new();
 }

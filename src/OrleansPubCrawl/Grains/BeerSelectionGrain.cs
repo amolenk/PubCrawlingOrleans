@@ -1,3 +1,4 @@
+using Orleans.Concurrency;
 using Orleans.Runtime;
 using Orleans.Utilities;
 
@@ -10,6 +11,7 @@ public interface IBeerSelectionGrain : IGrainWithIntegerKey
     Task AddOrUpdateBeersAsync(IEnumerable<Beer> beers);
 }
 
+[Reentrant] // TODO
 public class BeerSelectionGrain : Grain, IBeerSelectionGrain
 {
     private readonly IPersistentState<BeerSelectionState> _state;

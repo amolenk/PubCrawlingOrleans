@@ -181,7 +181,7 @@ GET https://{{host}}/events/{{eventId}}/venues/herberg-jan
 CrawlerId: amolenk
 
 ### Rate a beer
-PUT https://{{host}}/events/{{eventId}}/ratings/kasteel-tripel
+PUT https://{{host}}/events/{{eventId}}/beers/kasteel-tripel/ratings
 Content-Type: application/json
 CrawlerId: amolenk
 
@@ -195,6 +195,6 @@ CrawlerId: amolenk
 DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers
 CrawlerId: amolenk
 
-### Get beer ratings
-GET https://{{host}}/events/{{eventId}}/ratings
+### Get crawler status
+GET https://{{host}}/events/{{eventId}}/crawlers/status
 CrawlerId: amolenk

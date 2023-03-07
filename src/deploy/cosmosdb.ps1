@@ -17,7 +17,7 @@ az cosmosdb create `
     --resource-group $resourceGroupName `
     --kind GlobalDocumentDB `
     --default-consistency-level Eventual `
-    --enable-free-tier
+    --capabilities EnableServerless
 
 # Create the database
 az cosmosdb sql database create `
@@ -42,12 +42,32 @@ az cosmosdb sql container create `
     --resource-group $resourceGroupName
 
 # Get the connection string for the Cosmos DB account
-$connectionString = az cosmosdb keys list `
+$cosmosConnectionString = az cosmosdb keys list `
     --name $accountName `
     --resource-group $resourceGroupName `
     --type connection-strings `
     --query "connectionStrings[0].connectionString" `
     --output tsv
 
+# Create a storage account
+az storage account create `
+    --name orleanspubcrawl `
+    --resource-group $resourceGroupName `
+    --location $location `
+    --sku Standard_LRS
+
+# Create a table in the storage account
+az storage table create `
+    --name grainstate `
+    --account-name orleanspubcrawl
+
+# Get storage connection string
+$storageConnectionString = az storage account show-connection-string `
+    --name orleanspubcrawl `
+    --resource-group $resourceGroupName `
+    --query "connectionString" `
+    --output tsv
+
 # Output the connection string
-Write-Host "Connection String: $connectionString"
+Write-Host "Cosmos Connection String: $cosmosConnectionString"
+Write-Host "Storage Connection String: $storageConnectionString"

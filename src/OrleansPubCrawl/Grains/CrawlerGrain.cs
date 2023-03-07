@@ -1,87 +1,111 @@
-// using Orleans.Concurrency;
-// using Orleans.Runtime;
+using Orleans.Runtime;
 
-// public interface ICrawlerGrain : IGrainWithStringKey
-// {
-//     // Task JoinEventAsync(Guid eventId);
+public interface ICrawlerGrain : IGrainWithIntegerCompoundKey
+{
+    Task<string> GetVenueAsync();
+    Task SetVenueAsync(string venueId);
+    Task ClearVenueAsync();
 
-//     Task CheckInAsync(Guid eventId, string venueId);
+    Task CheckInAsync(string venueId);
+    Task CheckOutAsync();
 
-//     Task CheckOutAsync(Guid eventId);
+    Task<IDictionary<string, int>> GetBeerRatingsAsync();
+    Task RateBeerAsync(string beerId, int rating);
 
-// //    [AlwaysInterleave] // See https://dotnet.github.io/orleans/Documentation/grains/interleave.html
-//     Task<IDrinkingVenueGrain> GetCurrentLocationAsync();
-// }
+    Task<CrawlerStatus> GetStatusAsync();
+}
 
-// public class CrawlerGrain : Grain, ICrawlerGrain
-// {
-//     private readonly IPersistentState<CrawlerState> _state;
-//     private readonly ILogger _logger;
+public class CrawlerGrain : Grain, ICrawlerGrain
+{
+    private readonly IPersistentState<CrawlerGrainState> _state;
+    private readonly ILogger _logger;
 
-//     public CrawlerGrain(
-//         [PersistentState("crawler")] IPersistentState<CrawlerState> state,
-//         ILogger<CrawlerGrain> logger)
-//     {
-//         _state = state;
-//         _logger = logger;
-//     }
+    public CrawlerGrain(
+        [PersistentState("state")] IPersistentState<CrawlerGrainState> state,
+        ILogger<CrawlerGrain> logger)
+    {
+        _state = state;
+        _logger = logger;
+    }
 
-//     // TODO Use something like this?
-// //    private Guid GrainKey => this.GetPrimaryKey();
+    public Task<string> GetVenueAsync() => Task.FromResult(_state.State.CurrentVenue);
 
-//     // public async Task JoinEventAsync(Guid eventId)
-//     // {
-//     //     var eventGrain = GrainFactory.GetGrain<IEventGrain>(eventId);
-//     //     if (await eventGrain.ExistsAsync())
-//     //     {
-//     //         _state.State.EventId = eventId;
-//     //         await _state.WriteStateAsync();
-//     //     }
-//     //     else
-//     //     {
-//     //         throw new ArgumentException($"Event {eventId} does not exist.", nameof(eventId));
-//     //     }
-//     // }
+    public async Task SetVenueAsync(string venueId)
+    {
+        _state.State.CurrentVenue = venueId;
+        await _state.WriteStateAsync();
+    }
 
-//     public async Task CheckInAsync(Guid eventId, string venueId)
-//     {
-//         var venue = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
+    public Task ClearVenueAsync() => SetVenueAsync(string.Empty);
 
-//         // TODO Why use AsReference() here?
-//         await venue.EnterAsync(this.AsReference<ICrawlerGrain>());
+    public async Task CheckInAsync(string venueId)
+    {
+        if (_state.State.CurrentVenue == venueId)
+        {
+            // Already checked in.
+            return;
+        }
 
-//         _state.State.EventId = eventId;
-//         _state.State.CurrentVenueId = venueId;
-//         await _state.WriteStateAsync();
-//     }
+        var eventId = this.GetPrimaryKeyLong(out var crawlerId);
 
-//     public async Task CheckOutAsync(Guid eventId)
-//     {
-//         if (_state.State.CurrentVenueId.Length > 0)
-//         {
-//             var venueId = _state.State.CurrentVenueId;
-//             var venue = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
+        if (_state.State.CurrentVenue.Length > 0)
+        {
+            var currentVenueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, _state.State.CurrentVenue, null);
+            await currentVenueGrain.RemoveCrawlerAsync(crawlerId);
+        }
 
-//             await venue.LeaveAsync(this.AsReference<ICrawlerGrain>());
-//             await _state.ClearStateAsync();
-//         }
-//     }
+        var newVenueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
+        await newVenueGrain.AddCrawlerAsync(crawlerId);
 
-//     public Task<IDrinkingVenueGrain> GetCurrentLocationAsync()
-//     {
-//         if (_state.State.EventId == Guid.Empty)
-//         {
-//             throw new BadHttpRequestException("Crawler is not currently in an event.");
-//         }
+        _state.State.CurrentVenue = venueId;
+        await _state.WriteStateAsync();
+    }
 
-//         var venue = GrainFactory.GetGrain<IDrinkingVenueGrain>(_state.State.EventId, _state.State.CurrentVenueId, null);
+    public async Task CheckOutAsync()
+    {
+        if (_state.State.CurrentVenue.Length > 0)
+        {
+            var eventId = this.GetPrimaryKeyLong(out var crawlerId);
 
-//         return Task.FromResult(venue);
-//     }
-// }
+            var venueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, _state.State.CurrentVenue, null);
+            await venueGrain.RemoveCrawlerAsync(crawlerId);
+        }
 
-// public class CrawlerState
-// {
-//     public Guid EventId { get; set; } = Guid.Empty;
-//     public string CurrentVenueId { get; set; } = string.Empty;
-// }
+        _state.State.CurrentVenue = string.Empty;
+        await _state.WriteStateAsync();
+    }
+
+    public Task<IDictionary<string, int>> GetBeerRatingsAsync()
+    {
+        return Task.FromResult<IDictionary<string, int>>(_state.State.BeerRatings);
+    }
+
+    public async Task RateBeerAsync(string beerId, int rating)
+    {
+        var eventId = this.GetPrimaryKeyLong(out var crawlerId);
+
+        var beerSelectionGrain = GrainFactory.GetGrain<IBeerSelectionGrain>(eventId);
+        if (!await beerSelectionGrain.IsAvailableAsync(beerId))
+        {
+            throw new BeerNotAvailableException(beerId, eventId);
+        }
+
+        _state.State.BeerRatings[beerId] = rating;
+        await _state.WriteStateAsync();
+
+        var beerTotalScoreGrain = GrainFactory.GetGrain<IBeerScoreGrain>(eventId, beerId, null);
+        await beerTotalScoreGrain.UpdateRatingAsync(crawlerId, rating);
+    }
+
+    public Task<CrawlerStatus> GetStatusAsync() => Task.FromResult(new CrawlerStatus
+    {
+        VenueId = _state.State.CurrentVenue,
+        BeerRatings = _state.State.BeerRatings
+    });
+}
+
+public class CrawlerGrainState
+{
+    public string CurrentVenue { get; set; } = string.Empty;
+    public Dictionary<string, int> BeerRatings { get; set; } = new();
+}

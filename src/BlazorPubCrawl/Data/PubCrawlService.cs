@@ -10,20 +10,19 @@ public class PubCrawlService
     public PubCrawlService(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        // TODO Implement 'proper' security.
         _httpClient.DefaultRequestHeaders.Add("CrawlerId", "amolenk");
     }
 
     public async Task<Venue[]> GetVenuesAsync()
     {
-        return await _httpClient.GetFromJsonAsync<Venue[]>("/events/1/venues?t=" + DateTime.UtcNow.Ticks)
+        return await _httpClient.GetFromJsonAsync<Venue[]>("/events/1/venues")
             ?? Array.Empty<Venue>();
     }
 
     public async Task<Venue> GetVenueAsync(string venueId)
     {
         return await _httpClient.GetFromJsonAsync<Venue>($"/events/1/venues/{venueId}")
-            ?? new Venue(venueId, "Unknown", 0, 0, 0, false, new());
+            ?? new Venue(venueId, "Unknown", 0, 0, 0, new());
     }
 
     public async Task<Beer[]> GetBeerSelectionAsync()
@@ -32,10 +31,10 @@ public class PubCrawlService
             ?? Array.Empty<Beer>();
     }
 
-    public async Task<Dictionary<string, int>> GetBeerRatingsAsync()
+    public async Task<CrawlerStatus> GetCrawlerStatusAsync()
     {
-        return await _httpClient.GetFromJsonAsync<Dictionary<string, int>>("/events/1/ratings")
-            ?? new();
+        return await _httpClient.GetFromJsonAsync<CrawlerStatus>("/events/1/crawlers/status")
+            ?? new CrawlerStatus(string.Empty, new());
     }
 
     public async Task CheckInAsync(string venueId)
@@ -54,7 +53,7 @@ public class PubCrawlService
 
     public async Task RateBeerAsync(string beerId, int rating)
     {
-        var request = new HttpRequestMessage(HttpMethod.Put, $"/events/1/ratings/{beerId}")
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/events/1/beers/{beerId}/ratings")
         {
             Content = new StringContent(rating.ToString(), Encoding.UTF8, "application/json")
         };

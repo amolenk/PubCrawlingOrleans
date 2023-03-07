@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.SignalR;
 
-public interface IGeographyHub
+public interface IEventMapHub
 {
     Task OnVenueAttendanceUpdated(string venueId, int attendance);
 }
 
-public class GeographyHub : Hub<IGeographyHub>
+public class EventMapHub : Hub<IEventMapHub>
 {
 }

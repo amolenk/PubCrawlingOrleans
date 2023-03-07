@@ -6,5 +6,4 @@ public record Venue(
     double Latitude,
     double Longitude,
     int Attendance,
-    bool IsCheckedIn,
-    Dictionary<string, int> Beers);
+    List<string> Beers);

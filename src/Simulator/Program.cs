@@ -1,19 +1,25 @@
-﻿
-HttpClient client = new HttpClient()
-{
-    BaseAddress = new Uri("https://localhost:5001")
-};
-
-
-await RunCrawlerActions(1000, HttpMethod.Post);
-// await RunCrawlerActions(1000, HttpMethod.Delete);
-
-async Task RunCrawlerActions(int count, HttpMethod method)
-{
-    await Parallel.ForEachAsync(Enumerable.Range(0, count), async (i, _) =>
+﻿IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((hostContext, config) =>
     {
-        var request = new HttpRequestMessage(method, $"/events/1/venues/herberg-jan/crawlers/crawler{i}");
+        config.AddJsonFile("appsettings.json", optional: true);
+        config.AddCommandLine(args);
+    })
+    .UseOrleans(siloBuilder =>
+    {
+        siloBuilder.UseLocalhostClustering();
+        siloBuilder.AddMemoryGrainStorageAsDefault();
+        siloBuilder.UseInMemoryReminderService();
+    })
+    .ConfigureServices(services =>
+    {
+        services.AddHttpClient<PubCrawlService>(client =>
+        {
+            // TODO Get from configuration
+            client.BaseAddress = new Uri("https://localhost:5001");
+        });
 
-        await client.SendAsync(request);
-    });
-}
+        services.AddHostedService<Worker>();
+    })
+    .Build();
+
+host.Run();

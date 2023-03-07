@@ -24,8 +24,8 @@
                     <p>@beer.Description</p>
                 </div>
                 <div>
-                    <button class="btn @(_ratings[beer.Id] > 0 ? "selected" : "")" @onclick="() => LikeAsync(beer.Id)">👍</button>
-                    <button class="btn @(_ratings[beer.Id] < 0 ? "selected" : "")" @onclick="() => DislikeAsync(beer.Id)">👎</button>
+                    <button class="btn @(IsRatingSelected(beer.Id, 1) ? "selected" : "")" @onclick="() => LikeAsync(beer.Id)">👍</button>
+                    <button class="btn @(IsRatingSelected(beer.Id, -1) ? "selected" : "")" @onclick="() => DislikeAsync(beer.Id)">👎</button>
                 </div>
             </li>
         }
@@ -48,15 +48,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var venue = await PubCrawlService.GetVenueAsync(VenueId);
-
         var beers = (await PubCrawlService.GetBeerSelectionAsync())
             .ToDictionary(b => b.Id);
+        var venue = await PubCrawlService.GetVenueAsync(VenueId);
+        var status = await PubCrawlService.GetCrawlerStatusAsync();
+
+        foreach (var b in beers)
+        {
+            Console.WriteLine(b.Key);
+        }
 
         _venueName = venue.Name;
-        _isCheckedIn = venue.IsCheckedIn;
-        _ratings = venue.Beers;
-        _beers = venue.Beers.Select(b => beers[b.Key]).ToList();
+        _isCheckedIn = (status.VenueId == VenueId);
+        _ratings = status.BeerRatings;
+        _beers = venue.Beers.Select(b => beers[b]).ToList();
     } 
 
     public async Task CheckInAsync()
@@ -89,5 +94,10 @@
         await PubCrawlService.RateBeerAsync(beerId, newRating);
 
         _ratings[beerId] = newRating;
+    }
+
+    private bool IsRatingSelected(string beerId, int rating)
+    {
+        return _ratings.ContainsKey(beerId) && _ratings[beerId] == rating;
     }
 }
