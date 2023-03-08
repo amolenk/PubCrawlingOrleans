@@ -2,21 +2,21 @@ using Microsoft.AspNetCore.SignalR;
 
 public interface IEventMapHubProxy : IGrainObserver
 {
-    Task OnVenueAttendanceUpdatedAsync(string eventId, string venueId, int count);
+    Task SendVenueAttendanceUpdatedAsync(string eventId, string venueId, int attendance);
 }
 
 public class EventMapHubProxy : IEventMapHubProxy
 {
-    private readonly IHubContext<EventMapHub, IEventMapHub> _hubContext;
+    private readonly IHubContext<EventMapHub> _hubContext;
 
-    public EventMapHubProxy(IHubContext<EventMapHub, IEventMapHub> hubContext)
+    public EventMapHubProxy(IHubContext<EventMapHub> hubContext)
     {
         _hubContext = hubContext;
     }
 
-    public async Task OnVenueAttendanceUpdatedAsync(string eventId, string venueId, int attendance)
+    public Task SendVenueAttendanceUpdatedAsync(string eventId, string venueId, int attendance)
     {
         // TODO Include event ID in the message.
-        await _hubContext.Clients.All.OnVenueAttendanceUpdated(venueId, attendance);
+        return _hubContext.Clients.All.SendAsync("OnVenueAttendanceUpdated", venueId, attendance);
     }
 }

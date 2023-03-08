@@ -2,11 +2,7 @@ using Orleans.Runtime;
 
 public interface ICrawlerGrain : IGrainWithIntegerCompoundKey
 {
-    Task<string> GetVenueAsync();
-    Task SetVenueAsync(string venueId);
-    Task ClearVenueAsync();
-
-    Task CheckInAsync(string venueId);
+    Task CheckInAsync(IDrinkingVenueGrain venue);
     Task CheckOutAsync();
 
     Task<IDictionary<string, int>> GetBeerRatingsAsync();
@@ -28,19 +24,9 @@ public class CrawlerGrain : Grain, ICrawlerGrain
         _logger = logger;
     }
 
-    public Task<string> GetVenueAsync() => Task.FromResult(_state.State.CurrentVenue);
-
-    public async Task SetVenueAsync(string venueId)
+    public async Task CheckInAsync(IDrinkingVenueGrain venue)
     {
-        _state.State.CurrentVenue = venueId;
-        await _state.WriteStateAsync();
-    }
-
-    public Task ClearVenueAsync() => SetVenueAsync(string.Empty);
-
-    public async Task CheckInAsync(string venueId)
-    {
-        if (_state.State.CurrentVenue == venueId)
+        if (_state.State.CurrentVenue == venue)
         {
             // Already checked in.
             return;
@@ -48,30 +34,31 @@ public class CrawlerGrain : Grain, ICrawlerGrain
 
         var eventId = this.GetPrimaryKeyLong(out var crawlerId);
 
-        if (_state.State.CurrentVenue.Length > 0)
+        var self = this.AsReference<ICrawlerGrain>();
+
+        if (_state.State.CurrentVenue is {})
         {
-            var currentVenueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, _state.State.CurrentVenue, null);
-            await currentVenueGrain.RemoveCrawlerAsync(crawlerId);
+            await _state.State.CurrentVenue.RemoveCrawlerAsync(self);
         }
 
-        var newVenueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
-        await newVenueGrain.AddCrawlerAsync(crawlerId);
+        await venue.AddCrawlerAsync(self);
+        _state.State.CurrentVenue = venue;
 
-        _state.State.CurrentVenue = venueId;
         await _state.WriteStateAsync();
     }
 
     public async Task CheckOutAsync()
     {
-        if (_state.State.CurrentVenue.Length > 0)
+        if (_state.State.CurrentVenue is null)
         {
-            var eventId = this.GetPrimaryKeyLong(out var crawlerId);
-
-            var venueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(eventId, _state.State.CurrentVenue, null);
-            await venueGrain.RemoveCrawlerAsync(crawlerId);
+            return;
         }
 
-        _state.State.CurrentVenue = string.Empty;
+        var self = this.AsReference<ICrawlerGrain>();
+
+        await _state.State.CurrentVenue.RemoveCrawlerAsync(self);
+
+        _state.State.CurrentVenue = null;
         await _state.WriteStateAsync();
     }
 
@@ -97,15 +84,29 @@ public class CrawlerGrain : Grain, ICrawlerGrain
         await beerTotalScoreGrain.UpdateRatingAsync(crawlerId, rating);
     }
 
-    public Task<CrawlerStatus> GetStatusAsync() => Task.FromResult(new CrawlerStatus
+    public Task<CrawlerStatus> GetStatusAsync()
     {
-        VenueId = _state.State.CurrentVenue,
-        BeerRatings = _state.State.BeerRatings
-    });
+        string venueId;
+
+        if (_state.State.CurrentVenue is null)
+        {
+            venueId = string.Empty;
+        }
+        else
+        {
+            _state.State.CurrentVenue.GetPrimaryKeyLong(out venueId);
+        }
+
+        return Task.FromResult(new CrawlerStatus
+        {
+            VenueId = venueId,
+            BeerRatings = _state.State.BeerRatings
+        });
+    }
 }
 
 public class CrawlerGrainState
 {
-    public string CurrentVenue { get; set; } = string.Empty;
+    public IDrinkingVenueGrain? CurrentVenue { get; set; }
     public Dictionary<string, int> BeerRatings { get; set; } = new();
 }

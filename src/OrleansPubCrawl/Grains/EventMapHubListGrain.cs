@@ -50,7 +50,7 @@ public class EventMapHubListGrain : Grain, IEventMapHubListGrain
         foreach (KeyValuePair<SiloAddress, IEventMapHubProxy> pair in _hubs)
         {
             SiloAddress host = pair.Key;
-            IEventMapHubProxy hubRef = pair.Value;
+            IEventMapHubProxy hub = pair.Value;
             SiloStatus hostStatus = clusterMembers.GetSiloStatus(host);
             if (hostStatus is SiloStatus.Dead)
             {
@@ -59,7 +59,7 @@ public class EventMapHubListGrain : Grain, IEventMapHubListGrain
 
             if (hostStatus is SiloStatus.Active)
             {
-                hubs.Add(hubRef);
+                hubs.Add(hub);
             }
         }
 

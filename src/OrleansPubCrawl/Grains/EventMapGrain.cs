@@ -1,8 +1,6 @@
 using Orleans.Runtime;
-using Microsoft.AspNetCore.SignalR;
-using System.Drawing;
 
-interface IEventMapGrain : IGrainWithIntegerKey//, IHandleVenueEvents
+interface IEventMapGrain : IGrainWithIntegerKey
 {
     Task<IEnumerable<VenueLocation>> GetAsync();
 
@@ -11,23 +9,37 @@ interface IEventMapGrain : IGrainWithIntegerKey//, IHandleVenueEvents
     Task SetCrawlerCountAsync(string venueId, int count);
 }
 
-public class EventMapGrain : Grain, IEventMapGrain//, IRemindable
+public class EventMapGrain : Grain, IEventMapGrain
 {
     private readonly IPersistentState<EventMapState> _state;
-    private readonly IEventMapPushGrain _pushGrain;
-    // private readonly IHubContext<GeographyHub, IGeographyHub> _hubContext;
     private readonly ILogger _logger;
+    private string _eventId = null!;
+    private IEventMapHubListGrain _hubListGrain = null!;
+    private List<IEventMapHubProxy> _hubs = new();
+
 
     public EventMapGrain(
         [PersistentState("map")] IPersistentState<EventMapState> state,
-        // IHubContext<GeographyHub, IGeographyHub> hubContext,
         ILogger<EventMapGrain> logger)
     {
-        _pushGrain = GrainFactory.GetGrain<IEventMapPushGrain>(0);
-
         _state = state;
-        // _hubContext = hubContext;
         _logger = logger;
+    }
+
+    public override async Task OnActivateAsync(CancellationToken cancellationToken)
+    {
+        _eventId = this.GetPrimaryKeyString();
+        _hubListGrain = GrainFactory.GetGrain<IEventMapHubListGrain>(Guid.Empty);
+
+        // Set up a timer to regularly refresh the hubs, to respond to infrastructure changes.
+        await RefreshHubs();
+        RegisterTimer(
+            _ => RefreshHubs(),
+            null,
+            TimeSpan.FromSeconds(60),
+            TimeSpan.FromSeconds(60));
+
+        await base.OnActivateAsync(cancellationToken);
     }
 
     public Task<IEnumerable<VenueLocation>> GetAsync()
@@ -48,33 +60,7 @@ public class EventMapGrain : Grain, IEventMapGrain//, IRemindable
         };
 
         await _state.WriteStateAsync();
-
-        // await StartListeningAsync();
     }
-
-    // public async Task ReceiveReminder(string reminderName, TickStatus status)
-    // {
-    //     _logger.LogInformation("RECEIVED REMINDER");
-
-    //     foreach (var venueId in _state.State.Locations.Keys)
-    //     {
-    //         var venueGrain = GrainFactory.GetGrain<IDrinkingVenueGrain>(EventId, venueId, null);
-    //         await venueGrain.ObserveAsync(this.AsReference<IHandleVenueEvents>());
-    //     }
-    // }
-
-//     public async Task StartListeningAsync()
-//     {
-//         _logger.LogInformation("STARTING LISTENING");
-
-//         await this.RegisterOrUpdateReminder(
-//             "EnsureSubscriptions",
-//             TimeSpan.FromSeconds(60), // TODO Check how initial due time works, doesn't seem to fire with zero or low values
-//             TimeSpan.FromSeconds(60));
-
-//         // TEMP TO IMMEDIATELY START LISTENING
-// //        await ReceiveReminder("EnsureSubscriptions", default(TickStatus));
-//     }
 
     public async Task SetCrawlerCountAsync(string venueId, int count)
     {
@@ -85,26 +71,19 @@ public class EventMapGrain : Grain, IEventMapGrain//, IRemindable
 
         await _state.WriteStateAsync();
 
-        var eventId = this.GetPrimaryKeyString();
-
-        await _pushGrain.BroadcastAttendanceAsync(eventId, venueId, count);
+        await SendVenueAttendanceUpdatedAsync(venueId, count);
     }
 
-    // async Task IHandleVenueEvents.OnNumberOfCrawlersChangedAsync(string venueId, int crawlerCount)
-    // {
-    //     if (_state.State.Locations.TryGetValue(venueId, out var venueLocation))
-    //     {
-    //         venueLocation.Attendance = crawlerCount;
+    private async Task SendVenueAttendanceUpdatedAsync(string venueId, int count)
+    {
+        await Task.WhenAll(_hubs.Select(
+            hub => hub.SendVenueAttendanceUpdatedAsync(_eventId, venueId, count)));
+    }
 
-    //         await Task.WhenAll(
-    //             _hubContext.Clients.All.OnVenueAttendanceUpdated(venueId, crawlerCount),
-    //             _state.WriteStateAsync());
-
-    //         _logger.LogInformation("UPDATED VENUE {VenueId} WITH {CrawlerCount} CRAWLERS", venueId, crawlerCount);
-    //     }
-    // }
-
-    // private long EventId => this.GetPrimaryKeyLong();
+    private async Task RefreshHubs()
+    {
+        _hubs = await _hubListGrain.GetHubsAsync();
+    }
 }
 
 public class EventMapState

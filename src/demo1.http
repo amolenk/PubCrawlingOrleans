@@ -1,8 +1,6 @@
-@host = localhost:5001
-@eventId = 1
 
 ### Setup an event
-POST https://{{host}}/events/{{eventId}}
+POST https://localhost:5001/events/1
 Content-Type: application/json
 
 {
@@ -167,34 +165,14 @@ Content-Type: application/json
   ]
 }
 
-### Get beer selection
-GET https://{{host}}/events/{{eventId}}/beers
-
-### Get beer highscores
-GET https://{{host}}/events/{{eventId}}/beers/highscores
-
-### Get event map / venues
-GET https://{{host}}/events/{{eventId}}/venues
-
-### Get venue information
-GET https://{{host}}/events/{{eventId}}/venues/herberg-jan
+### Get crawler status from 'server' 1.
+GET https://localhost:5001/events/1/crawlers/status
 CrawlerId: amolenk
 
-### Rate a beer
-PUT https://{{host}}/events/{{eventId}}/beers/kasteel-tripel/ratings
-Content-Type: application/json
+### Check-in on 'server' 2.
+POST https://localhost:5002/events/1/venues/herberg-jan/crawlers
 CrawlerId: amolenk
 
-1
-
-### Check-in
-POST https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers
-CrawlerId: amolenk
-
-### Check-out
-DELETE https://{{host}}/events/{{eventId}}/venues/herberg-jan/crawlers
-CrawlerId: amolenk
-
-### Get crawler status
-GET https://{{host}}/events/{{eventId}}/crawlers/status
+### Get status from 'server' 1 again.
+GET https://localhost:5002/events/1/crawlers/status
 CrawlerId: amolenk

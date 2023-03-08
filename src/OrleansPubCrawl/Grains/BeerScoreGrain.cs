@@ -5,6 +5,7 @@ public interface IBeerScoreGrain : IGrainWithIntegerCompoundKey
     Task UpdateRatingAsync(string crawlerId, int rating);
 }
 
+// TODO Use CrawlerReferneces instead of strings
 public class BeerScoreGrain : Grain, IBeerScoreGrain
 {
     private readonly IPersistentState<BeerScoreState> _state;

@@ -7,13 +7,13 @@ internal sealed class EventMapHubListUpdater : BackgroundService
 {
     private readonly IGrainFactory _grainFactory;
     private readonly ILocalSiloDetails _localSiloDetails;
-    private readonly EventMapHubProxy _hubProxy;
+    private readonly IEventMapHubProxy _hubProxy;
     private readonly ILogger _logger;
 
     public EventMapHubListUpdater(
         IGrainFactory grainFactory,
         ILocalSiloDetails localSiloDetails,
-        IHubContext<EventMapHub, IEventMapHub> hubContext,
+        IHubContext<EventMapHub> hubContext,
         ILogger<EventMapHubListUpdater> logger)
     {
         _grainFactory = grainFactory;
