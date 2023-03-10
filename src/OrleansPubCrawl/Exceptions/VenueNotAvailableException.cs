@@ -1,3 +1,4 @@
+[GenerateSerializer]
 public class VenueNotAvailableException : Exception
 {
     public VenueNotAvailableException(string venueId, long eventId)

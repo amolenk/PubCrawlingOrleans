@@ -1,3 +1,4 @@
+[GenerateSerializer]
 public class BeerNotAvailableException : Exception
 {
     public BeerNotAvailableException(string beerId, long eventId)

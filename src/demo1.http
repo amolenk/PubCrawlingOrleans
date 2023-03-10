@@ -174,5 +174,5 @@ POST https://localhost:5002/events/1/venues/herberg-jan/crawlers
 CrawlerId: amolenk
 
 ### Get status from 'server' 1 again.
-GET https://localhost:5002/events/1/crawlers/status
+GET https://localhost:5001/events/1/crawlers/status
 CrawlerId: amolenk

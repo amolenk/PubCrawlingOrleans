@@ -26,6 +26,7 @@ public class CrawlerGrain : Grain, ICrawlerGrain
 
     public async Task CheckInAsync(IDrinkingVenueGrain venue)
     {
+        // If we're already checked in, do nothing.
         if (_state.State.CurrentVenue == venue)
         {
             // Already checked in.
@@ -33,14 +34,15 @@ public class CrawlerGrain : Grain, ICrawlerGrain
         }
 
         var eventId = this.GetPrimaryKeyLong(out var crawlerId);
-
         var self = this.AsReference<ICrawlerGrain>();
 
+        // If we're checking in to a new venue, remove ourselves from the old one.
         if (_state.State.CurrentVenue is {})
         {
             await _state.State.CurrentVenue.RemoveCrawlerAsync(self);
         }
 
+        // Add ourselves to the new venue.
         await venue.AddCrawlerAsync(self);
         _state.State.CurrentVenue = venue;
 

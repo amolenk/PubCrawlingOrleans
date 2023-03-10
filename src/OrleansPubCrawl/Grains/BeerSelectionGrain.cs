@@ -11,7 +11,7 @@ public interface IBeerSelectionGrain : IGrainWithIntegerKey
     Task AddOrUpdateBeersAsync(IEnumerable<Beer> beers);
 }
 
-[Reentrant] // TODO
+[Reentrant]
 public class BeerSelectionGrain : Grain, IBeerSelectionGrain
 {
     private readonly IPersistentState<BeerSelectionState> _state;

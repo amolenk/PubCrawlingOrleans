@@ -12,9 +12,6 @@ builder.Services.AddResponseCompression(opts =>
         new[] { "application/octet-stream" });
 });
 
-// TODO Create GrainService so that it starts after the silo is up and running.
-builder.Services.AddHostedService<EventMapHubListUpdater>();
-
 var instanceId = builder.Configuration.GetValue<int>("InstanceId", 0);
 
 builder.Host.UseOrleans(siloBuilder =>
@@ -29,13 +26,10 @@ builder.Host.UseOrleans(siloBuilder =>
         gatewayPort: 30000 + instanceId,
         primarySiloEndpoint: new IPEndPoint(IPAddress.Loopback, 11111));
 
-    siloBuilder.AddMemoryGrainStorageAsDefault();
-
-    // siloBuilder.AddAzureTableGrainStorageAsDefault(options =>
-    // {
-    //     options.ConfigureTableServiceClient(builder.Configuration["Storage:ConnectionString"]!);
-    // });    
+    siloBuilder.AddMemoryGrainStorageAsDefault();    
 });
+
+builder.Services.AddHostedService<EventMapObserverService>();
 
 var app = builder.Build();
 
@@ -108,8 +102,8 @@ app.MapGet("/events/{eventId}/venues/{venueId}",
 app.MapPost("/events/{eventId}/venues/{venueId}/crawlers",
     async (IGrainFactory grainFactory, int eventId, string venueId, [FromHeader] string crawlerId) =>
     {
-        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
         var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(eventId, crawlerId, null);
+        var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId, null);
 
         try
         {

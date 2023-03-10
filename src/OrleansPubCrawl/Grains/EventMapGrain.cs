@@ -14,8 +14,8 @@ public class EventMapGrain : Grain, IEventMapGrain
     private readonly IPersistentState<EventMapState> _state;
     private readonly ILogger _logger;
     private string _eventId = null!;
-    private IEventMapHubListGrain _hubListGrain = null!;
-    private List<IEventMapHubProxy> _hubs = new();
+    private IEventMapObserverListGrain _observerListGrain = null!;
+    private List<IEventMapObserver> _observers = new();
 
 
     public EventMapGrain(
@@ -29,12 +29,12 @@ public class EventMapGrain : Grain, IEventMapGrain
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _eventId = this.GetPrimaryKeyString();
-        _hubListGrain = GrainFactory.GetGrain<IEventMapHubListGrain>(Guid.Empty);
+        _observerListGrain = GrainFactory.GetGrain<IEventMapObserverListGrain>(Guid.Empty);
 
         // Set up a timer to regularly refresh the hubs, to respond to infrastructure changes.
-        await RefreshHubs();
+        await RefreshObservers();
         RegisterTimer(
-            _ => RefreshHubs(),
+            _ => RefreshObservers(),
             null,
             TimeSpan.FromSeconds(60),
             TimeSpan.FromSeconds(60));
@@ -71,18 +71,18 @@ public class EventMapGrain : Grain, IEventMapGrain
 
         await _state.WriteStateAsync();
 
-        await SendVenueAttendanceUpdatedAsync(venueId, count);
+        await NotifyVenueAttendanceUpdatedAsync(venueId, count);
     }
 
-    private async Task SendVenueAttendanceUpdatedAsync(string venueId, int count)
+    private async Task NotifyVenueAttendanceUpdatedAsync(string venueId, int count)
     {
-        await Task.WhenAll(_hubs.Select(
-            hub => hub.SendVenueAttendanceUpdatedAsync(_eventId, venueId, count)));
+        await Task.WhenAll(_observers.Select(
+            hub => hub.OnVenueAttendanceUpdatedAsync(_eventId, venueId, count)));
     }
 
-    private async Task RefreshHubs()
+    private async Task RefreshObservers()
     {
-        _hubs = await _hubListGrain.GetHubsAsync();
+        _observers = await _observerListGrain.GetObserversAsync();
     }
 }
 

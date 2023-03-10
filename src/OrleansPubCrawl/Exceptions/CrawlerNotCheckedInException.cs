@@ -1,3 +1,4 @@
+[GenerateSerializer]
 public class CrawlerNotCheckedInException : Exception
 {
     public CrawlerNotCheckedInException(string crawlerId, string venueId, long eventId)

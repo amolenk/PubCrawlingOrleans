@@ -3,38 +3,38 @@
 
 using Orleans.Runtime;
 
-public interface IEventMapHubListGrain : IGrainWithGuidKey
+public interface IEventMapObserverListGrain : IGrainWithGuidKey
 {
-    ValueTask AddHubAsync(SiloAddress host, IEventMapHubProxy hub);
+    ValueTask AddObserverAsync(SiloAddress host, IEventMapObserver observer);
     
-    ValueTask<List<IEventMapHubProxy>> GetHubsAsync();
+    ValueTask<List<IEventMapObserver>> GetObserversAsync();
 }
 
-public class EventMapHubListGrain : Grain, IEventMapHubListGrain
+public class EventMapObserverListGrain : Grain, IEventMapObserverListGrain
 {
     private readonly IClusterMembershipService _clusterMembership;
-    private readonly Dictionary<SiloAddress, IEventMapHubProxy> _hubs = new();
+    private readonly Dictionary<SiloAddress, IEventMapObserver> _observers = new();
     private MembershipVersion _cacheMembershipVersion;
-    private List<IEventMapHubProxy>? _cache;
+    private List<IEventMapObserver>? _cache;
 
-    public EventMapHubListGrain(IClusterMembershipService clusterMembershipService)
+    public EventMapObserverListGrain(IClusterMembershipService clusterMembershipService)
     {
         _clusterMembership = clusterMembershipService;
     }
 
-    public ValueTask AddHubAsync(SiloAddress host, IEventMapHubProxy hub)
+    public ValueTask AddObserverAsync(SiloAddress host, IEventMapObserver observer)
     {
         // Invalidate the cache.
         _cache = null;
-        _hubs[host] = hub;
+        _observers[host] = observer;
 
         return default;
     }
 
-    public ValueTask<List<IEventMapHubProxy>> GetHubsAsync() =>
-        new(GetCachedHubs());
+    public ValueTask<List<IEventMapObserver>> GetObserversAsync() =>
+        new(GetCachedObservers());
 
-    private List<IEventMapHubProxy> GetCachedHubs()
+    private List<IEventMapObserver> GetCachedObservers()
     {
         // Returns a cached list of hubs if the cache is valid, otherwise builds a list of hubs.
         ClusterMembershipSnapshot clusterMembers = _clusterMembership.CurrentSnapshot;
@@ -44,13 +44,13 @@ public class EventMapHubListGrain : Grain, IEventMapHubListGrain
         }
 
         // Filter out hosts which are not yet active or have been removed from the cluster.
-        var hubs = new List<IEventMapHubProxy>();
+        var observers = new List<IEventMapObserver>();
         var toDelete = new List<SiloAddress>();
 
-        foreach (KeyValuePair<SiloAddress, IEventMapHubProxy> pair in _hubs)
+        foreach (KeyValuePair<SiloAddress, IEventMapObserver> pair in _observers)
         {
             SiloAddress host = pair.Key;
-            IEventMapHubProxy hub = pair.Value;
+            IEventMapObserver observer = pair.Value;
             SiloStatus hostStatus = clusterMembers.GetSiloStatus(host);
             if (hostStatus is SiloStatus.Dead)
             {
@@ -59,17 +59,17 @@ public class EventMapHubListGrain : Grain, IEventMapHubListGrain
 
             if (hostStatus is SiloStatus.Active)
             {
-                hubs.Add(hub);
+                observers.Add(observer);
             }
         }
 
         foreach (SiloAddress host in toDelete)
         {
-            _hubs.Remove(host);
+            _observers.Remove(host);
         }
 
-        _cache = hubs;
+        _cache = observers;
         _cacheMembershipVersion = clusterMembers.Version;
-        return hubs;
+        return observers;
     }
 }

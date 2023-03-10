@@ -1,41 +1,39 @@
 using Microsoft.AspNetCore.SignalR;
-using Orleans.Concurrency;
 using Orleans.Runtime;
 
-[Reentrant]
-internal sealed class EventMapHubListUpdater : BackgroundService
+// It would be even nicer if we could let this service participate in the Orleans
+// lifecycle (or make it a GrainService).
+// Unfortunately, that's not possible yet: https://github.com/dotnet/orleans/issues/7556
+internal sealed class EventMapObserverService : BackgroundService
 {
     private readonly IGrainFactory _grainFactory;
     private readonly ILocalSiloDetails _localSiloDetails;
-    private readonly IEventMapHubProxy _hubProxy;
+    private readonly IEventMapObserver _observer;
     private readonly ILogger _logger;
 
-    public EventMapHubListUpdater(
+    public EventMapObserverService(
         IGrainFactory grainFactory,
         ILocalSiloDetails localSiloDetails,
         IHubContext<EventMapHub> hubContext,
-        ILogger<EventMapHubListUpdater> logger)
+        ILogger<EventMapObserverService> logger)
     {
         _grainFactory = grainFactory;
         _localSiloDetails = localSiloDetails;
-        _hubProxy = new EventMapHubProxy(hubContext);
+        _observer = new EventMapObserver(hubContext);
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var hubListGrain = _grainFactory.GetGrain<IEventMapHubListGrain>(Guid.Empty);
+        var observerListGrain = _grainFactory.GetGrain<IEventMapObserverListGrain>(Guid.Empty);
         var localSiloAddress = _localSiloDetails.SiloAddress;
-        var hubRef = _grainFactory.CreateObjectReference<IEventMapHubProxy>(_hubProxy);
+        var hubRef = _grainFactory.CreateObjectReference<IEventMapObserver>(_observer);
 
-        // This runs in a loop because the HubListGrain does not use any form of persistence, so if the
-        // host which it is activated on stops, then it will lose any internal state.
-        // If HubListGrain was changed to use persistence, then this loop could be safely removed.
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await hubListGrain.AddHubAsync(localSiloAddress, hubRef);
+                await observerListGrain.AddObserverAsync(localSiloAddress, hubRef);
             }
             catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
             {
