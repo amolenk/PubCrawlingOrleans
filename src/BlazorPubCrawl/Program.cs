@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using BlazorPubCrawl.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +9,8 @@ builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddHttpClient<PubCrawlService>(client =>
 {
-    // TODO Get from configuration
-    client.BaseAddress = new Uri("https://localhost:5001");
+    client.BaseAddress = new Uri(builder.Configuration["PubCrawlApiAddress"]
+        ?? "https://localhost:5001");
 });
 
 var app = builder.Build();

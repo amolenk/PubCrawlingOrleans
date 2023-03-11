@@ -14,32 +14,49 @@
 </div>
 
 <div class="container">
-    <h1>Top Beers 🍻</h1>
+    <h1 @onclick="RefreshBeerLeaderboardAsync">Top Beers 🍻</h1>
+
+    <ul class="beer-list">
+        @foreach (var beer in _beerLeaderboard)
+        {
+            <li class="beer-item">
+                <div class="beer-info">
+                    <h4>@beer.Brewery</h4>
+                    <h2>@beer.Name <span>@(beer.Abv)%</span></h2>
+                </div>
+                <div>
+                    <p class="beer-rating">@(string.Empty.PadRight(beer.Score, '\u2B50'))</p>
+                </div>
+            </li>
+        }
+    </ul>
 </div>
 
 
 @code {
     private HubConnection? hubConnection;
-    private List<string> messages = new List<string>();
-    private string? userInput;
-    private string? messageInput;
     private DotNetObjectReference<Index>? dotNetObjectReference;
+    private Dictionary<string, Beer> _beers = new();
+    private List<BeerHighscore> _beerLeaderboard = new();
 
     protected override async Task OnInitializedAsync()
     {
-        @* await JSRuntime.InvokeVoidAsync("initializeMap"); *@
-
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:5001/geohub")
+            .WithUrl("https://localhost:5001/eventmaphub")
             .Build();
 
-        // TODO Make sure map is rendered before calling this
-        hubConnection.On<string, int>("OnVenueAttendanceUpdated", (venueId, attendance) =>
+        hubConnection.On<string, string, int>("OnVenueAttendanceUpdated", (eventId, venueId, attendance) =>
         {
+            // Ignore the event id for now, we only have one event
             JSRuntime.InvokeVoidAsync("updateMarkerAttendance", venueId, attendance);
         });
 
         await hubConnection.StartAsync();
+
+        _beers = (await PubCrawlService.GetBeerSelectionAsync())
+            .ToDictionary(b => b.Id);
+
+        await RefreshBeerLeaderboardAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -64,17 +81,6 @@
         return Task.CompletedTask;
     }
 
-    private async Task Send()
-    {
-        if (hubConnection is not null)
-            {
-                await hubConnection.SendAsync("SendMessage", userInput, messageInput);
-            }
-    }
-
-    public bool IsConnected =>
-        hubConnection?.State == HubConnectionState.Connected;
-
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
@@ -86,5 +92,22 @@
         {
             dotNetObjectReference.Dispose();
         }
+    }
+
+    private async Task RefreshBeerLeaderboardAsync()
+    {
+        _beerLeaderboard = (await PubCrawlService.GetBeerLeaderboardAsync())
+            .Select(b =>
+            {
+                var beer = _beers[b.Key];
+                return new BeerHighscore(
+                    beer.Id,
+                    beer.Name,
+                    beer.Brewery,
+                    beer.Style,
+                    beer.Abv,
+                    b.Value);
+            })
+            .ToList();
     }
 }

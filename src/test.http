@@ -170,8 +170,8 @@ Content-Type: application/json
 ### Get beer selection
 GET https://{{host}}/events/{{eventId}}/beers
 
-### Get beer highscores
-GET https://{{host}}/events/{{eventId}}/beers/highscores
+### Get beer leaderboard
+GET https://{{host}}/events/{{eventId}}/beers/leaderboard
 
 ### Get event map / venues
 GET https://{{host}}/events/{{eventId}}/venues

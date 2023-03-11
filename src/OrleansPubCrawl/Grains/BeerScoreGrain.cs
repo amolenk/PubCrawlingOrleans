@@ -5,7 +5,6 @@ public interface IBeerScoreGrain : IGrainWithIntegerCompoundKey
     Task UpdateRatingAsync(string crawlerId, int rating);
 }
 
-// TODO Use CrawlerReferneces instead of strings
 public class BeerScoreGrain : Grain, IBeerScoreGrain
 {
     private readonly IPersistentState<BeerScoreState> _state;
@@ -57,7 +56,6 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
         await _state.WriteStateAsync();
     }
 
-    // TODO
     private int CalculateScore(IEnumerable<int> ratings)
     {
         int likes = 0;
@@ -76,14 +74,19 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
             }
         }
 
-        // Calculate the percentage of likes
-        double totalVotes = likes + dislikes;
-        double likePercentage = (totalVotes > 0) ? likes / totalVotes : 0;
 
-        // Map the percentage to a 1-5 scale
-        int score = (int)Math.Round(likePercentage * 4) + 1;
-
-        return score;
+        int totalVotes = likes + dislikes;
+        if (totalVotes == 0)
+        {
+            return 0;
+        }
+        
+        double ratio = (double)likes / totalVotes;
+        
+        // use a sigmoid function to normalize the rating between 1 and 5
+        double score = 5 * (1 / (1 + Math.Exp(-10 * (ratio - 0.5))));
+        
+        return (int)Math.Round(score);
     }
 
     private Task ReportScoreAsync()

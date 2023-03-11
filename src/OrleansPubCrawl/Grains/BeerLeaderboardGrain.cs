@@ -1,6 +1,6 @@
+using Orleans.Concurrency;
 using Orleans.Runtime;
 
-// TODO Leaderboard
 public interface IBeerLeaderboardGrain : IGrainWithIntegerKey
 {
     Task<Dictionary<string, int>> GetTopBeersAsync();
@@ -21,7 +21,6 @@ public class BeerLeaderboardGrain : Grain, IBeerLeaderboardGrain
         _logger = logger;
     }
 
-    // TODO Reentrant?
    public Task<Dictionary<string, int>> GetTopBeersAsync() => Task.FromResult(
         _state.State.Scores
             .OrderByDescending(x => x.Value)

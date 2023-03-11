@@ -35,7 +35,7 @@ public class EventSimulatorGrain : Grain, IEventSimulatorGrain
             _venueBeers[venue.Id] = venueDetails.Beers;
         }
 
-        this.RegisterTimer(AddCrawler, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(20));
+        this.RegisterTimer(AddCrawler, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(25));
     }
 
     public Task<Venue[]> GetVenuesAsync() => Task.FromResult(_venues);

@@ -35,24 +35,19 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 
-// TODO Change path
-app.MapHub<EventMapHub>("/geohub");
+app.MapHub<EventMapHub>("/eventmaphub");
 
 // Register an event.
 app.MapPost("/events/{eventId}",
     async (IGrainFactory grainFactory, int eventId, [FromBody] EventRegistration registration) =>
     {
         var beerSelectionGrain = grainFactory.GetGrain<IBeerSelectionGrain>(eventId);
-        await beerSelectionGrain.AddOrUpdateBeersAsync(registration.Beers); // TODO SetBeersAsync
-
-//        var eventMapGrain = grainFactory.GetGrain<IEventMapGrain>(eventId);
+        await beerSelectionGrain.AddOrUpdateBeersAsync(registration.Beers);
 
         foreach (var venue in registration.Venues)
         {
             var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venue.Id, null);
             await venueGrain.RegisterAsync(venue);
-
-  //          await eventMapGrain.AddOrUpdateVenueLocationAsync(venue);
         }
 
         return Results.Ok();
@@ -69,7 +64,7 @@ app.MapGet("/events/{eventId}/beers",
     });
 
 // Get the beer high-score list.
-app.MapGet("/events/{eventId}/beers/highscores", // TODO Leaderboard
+app.MapGet("/events/{eventId}/beers/leaderboard", 
     async (IGrainFactory grainFactory, int eventId) =>
     {
         var beerHighScoresGrain = grainFactory.GetGrain<IBeerLeaderboardGrain>(eventId);
@@ -118,14 +113,11 @@ app.MapPost("/events/{eventId}/venues/{venueId}/crawlers",
     });
 
 // Check-out a crawler from a venue.
-app.MapDelete("/events/{eventId}/venues/{venueId}/crawlers", // TODO Better path
-    async (IGrainFactory grainFactory, int eventId, string venueId, [FromHeader] string crawlerId) =>
+app.MapDelete("/events/{eventId}/crawlers/status/checkin", 
+    async (IGrainFactory grainFactory, int eventId, [FromHeader] string crawlerId) =>
     {
         var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(eventId, crawlerId, null);
         await crawlerGrain.CheckOutAsync();
-
-        // var venueGrain = grainFactory.GetGrain<IDrinkingVenueGrain>(eventId, venueId);
-        // await venueGrain.CheckOutAsync(crawlerId);
 
         return Results.Ok();
     });

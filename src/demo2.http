@@ -168,5 +168,3 @@ Content-Type: application/json
 ### Check-in to a non-existing venue.
 POST https://localhost:5002/events/1/venues/WRONG-VENUE-ID/crawlers
 CrawlerId: amolenk
-
-## TODO USE OTHER VENUE THAN DEMO 1

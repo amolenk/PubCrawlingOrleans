@@ -17,7 +17,6 @@ public class EventMapObserver : IEventMapObserver
 
     public Task OnVenueAttendanceUpdatedAsync(string eventId, string venueId, int attendance)
     {
-        // TODO Include event ID in the message.
-        return _context.Clients.All.SendAsync("OnVenueAttendanceUpdated", venueId, attendance);
+        return _context.Clients.All.SendAsync("OnVenueAttendanceUpdated", eventId, venueId, attendance);
     }
 }

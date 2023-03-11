@@ -38,7 +38,7 @@ public class CrawlerSimulatorGrain : Grain, ICrawlerSimulatorGrain
 
         // Decide on which beers to drink here.
         var availableBeers = await _eventSimulatorGrain.GetBeersAsync(venue.Id);
-        var beersToDrink = new Stack<string>(availableBeers.Take(_random.Next(1, availableBeers.Count)));
+        var beersToDrink = new Stack<string>(availableBeers.Take(_random.Next(1, availableBeers.Count + 1)));
 
         ScheduleNextBeer(beersToDrink);
     }
@@ -66,13 +66,13 @@ public class CrawlerSimulatorGrain : Grain, ICrawlerSimulatorGrain
     private void ScheduleNextCheckin() => this.RegisterTimer(
         CheckInAsync,
         null,
-        TimeSpan.FromMilliseconds(_random.Next(3000)),
+        TimeSpan.FromMilliseconds(_random.Next(1000, 3000)),
         TimeSpan.FromMilliseconds(-1));
 
     private void ScheduleNextBeer(Stack<string> beersToDrink) => this.RegisterTimer(
         DrinkBeerAsync,
         beersToDrink,
-        TimeSpan.FromMilliseconds(_random.Next(3000)),
+        TimeSpan.FromMilliseconds(_random.Next(1000, 3000)),
         TimeSpan.FromMilliseconds(-1));
 
     private void Shuffle<T>(List<T> list)

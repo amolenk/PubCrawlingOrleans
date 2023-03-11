@@ -53,11 +53,6 @@
         var venue = await PubCrawlService.GetVenueAsync(VenueId);
         var status = await PubCrawlService.GetCrawlerStatusAsync();
 
-        foreach (var b in beers)
-        {
-            Console.WriteLine(b.Key);
-        }
-
         _venueName = venue.Name;
         _isCheckedIn = (status.VenueId == VenueId);
         _ratings = status.BeerRatings;

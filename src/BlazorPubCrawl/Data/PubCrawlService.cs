@@ -46,7 +46,7 @@ public class PubCrawlService
 
     public async Task CheckOutAsync(string venueId)
     {
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/events/1/venues/{venueId}/crawlers");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/events/1/crawlers/status/checkin");
 
         await _httpClient.SendAsync(request);
     }
@@ -59,5 +59,11 @@ public class PubCrawlService
         };
 
         await _httpClient.SendAsync(request);
+    }
+
+    public async Task<Dictionary<string, int>> GetBeerLeaderboardAsync()
+    {
+        return await _httpClient.GetFromJsonAsync<Dictionary<string, int>>(
+            "/events/1/beers/leaderboard") ?? new();
     }
 }

@@ -10,12 +10,12 @@
         siloBuilder.AddMemoryGrainStorageAsDefault();
         siloBuilder.UseInMemoryReminderService();
     })
-    .ConfigureServices(services =>
+    .ConfigureServices((context, services) =>
     {
         services.AddHttpClient<PubCrawlService>(client =>
         {
-            // TODO Get from configuration
-            client.BaseAddress = new Uri("https://localhost:5001");
+            client.BaseAddress = new Uri(context.Configuration["PubCrawlApiAddress"]
+                ?? "https://localhost:5001");
         });
 
         services.AddHostedService<Worker>();
