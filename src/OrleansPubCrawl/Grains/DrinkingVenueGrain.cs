@@ -107,10 +107,12 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
             return Task.CompletedTask;
         }
 
-        if (_reportCrawlerCountTask.IsCompleted)
+        if (!_reportCrawlerCountTask.IsCompleted)
         {
-            _reportCrawlerCountTask = ReportCrawlerCountInternalAsync();
+            return Task.CompletedTask;
         }
+
+        _reportCrawlerCountTask = ReportCrawlerCountInternalAsync();
 
         return _reportCrawlerCountTask;
 

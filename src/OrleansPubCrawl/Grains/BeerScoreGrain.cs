@@ -74,7 +74,6 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
             }
         }
 
-
         int totalVotes = likes + dislikes;
         if (totalVotes == 0)
         {
@@ -91,11 +90,12 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
 
     private Task ReportScoreAsync()
     {
-        if (_reportScoreTask.IsCompleted)
+        if (!_reportScoreTask.IsCompleted)
         {
-            _reportScoreTask = ReportScoreInternalAsync();
+            return Task.CompletedTask;
         }
 
+        _reportScoreTask = ReportScoreInternalAsync();
         return _reportScoreTask;
 
         async Task ReportScoreInternalAsync()

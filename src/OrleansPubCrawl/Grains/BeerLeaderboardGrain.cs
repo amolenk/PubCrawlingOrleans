@@ -30,14 +30,7 @@ public class BeerLeaderboardGrain : Grain, IBeerLeaderboardGrain
 
     public async Task UpdateScoreAsync(string beerId, int score)
     {
-        if (_state.State.Scores.ContainsKey(beerId) &&
-            _state.State.Scores[beerId] == score)
-        {
-            return;
-        }
-
         _state.State.Scores[beerId] = score;
-
         await _state.WriteStateAsync();
     }
 }

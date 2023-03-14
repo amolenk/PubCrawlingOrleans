@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using Orleans.BroadcastChannel;
 
 public interface IEventMapObserver : IGrainObserver
 {

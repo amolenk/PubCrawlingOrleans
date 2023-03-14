@@ -33,7 +33,6 @@ public class CrawlerGrain : Grain, ICrawlerGrain
             return;
         }
 
-        var eventId = this.GetPrimaryKeyLong(out var crawlerId);
         var self = this.AsReference<ICrawlerGrain>();
 
         // If we're checking in to a new venue, remove ourselves from the old one.
@@ -82,7 +81,7 @@ public class CrawlerGrain : Grain, ICrawlerGrain
         _state.State.BeerRatings[beerId] = rating;
         await _state.WriteStateAsync();
 
-        var beerTotalScoreGrain = GrainFactory.GetGrain<IBeerScoreGrain>(eventId, beerId, null);
+        var beerTotalScoreGrain = GrainFactory.GetGrain<IBeerScoreGrain>(primaryKey: eventId, keyExtension: beerId);
         await beerTotalScoreGrain.UpdateRatingAsync(crawlerId, rating);
     }
 
