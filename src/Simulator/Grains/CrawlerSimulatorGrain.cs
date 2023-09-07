@@ -34,7 +34,14 @@ public class CrawlerSimulatorGrain : Grain, ICrawlerSimulatorGrain
         _venueIndex = (_venueIndex + 1) % _venues.Count;
         var venue = _venues[_venueIndex];
 
-        await _pubCrawlService.CheckInAsync(venue.Id, this.GetPrimaryKeyString());
+        try
+        {
+            await _pubCrawlService.CheckInAsync(venue.Id, this.GetPrimaryKeyString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Failed to communicate with API: " + ex.Message, ex);
+        }
 
         // Decide on which beers to drink here.
         var availableBeers = await _eventSimulatorGrain.GetBeersAsync(venue.Id);
@@ -51,7 +58,14 @@ public class CrawlerSimulatorGrain : Grain, ICrawlerSimulatorGrain
 
         var like = _random.Next(-1, 5) > 0;
 
-        await _pubCrawlService.RateBeerAsync(beer, like ? 1 : -1, this.GetPrimaryKeyString());
+        try
+        {
+            await _pubCrawlService.RateBeerAsync(beer, like ? 1 : -1, this.GetPrimaryKeyString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Failed to communicate with API: " + ex.Message, ex);
+        }
 
         if (beersToDrink.Count > 0)
         {
