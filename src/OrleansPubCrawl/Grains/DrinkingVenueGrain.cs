@@ -16,7 +16,6 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
     private readonly IPersistentState<DrinkingVenueState> _state;
     private readonly ILogger<DrinkingVenueGrain> _logger;
     private IEventMapGrain _eventMapGrain = null!;
-    private Task _reportCrawlerCountTask = Task.CompletedTask;
     private int _lastReportedCrawlerCount;
 
     public DrinkingVenueGrain(
@@ -33,14 +32,13 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
 
         // Set up a timer to regularly flush.
         RegisterTimer(
-            _ =>
+            static async self => 
             {
-                ReportCrawlerCountAsync();
-                return Task.CompletedTask;
+                await ((DrinkingVenueGrain)self).ReportCrawlerCountAsync();
             },
-            null,
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(1));
+            this,
+            TimeSpan.FromSeconds(3),
+            TimeSpan.FromSeconds(3));
 
         await base.OnActivateAsync(cancellationToken);
     }
@@ -58,11 +56,11 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
 
     public async Task AddCrawlerAsync(ICrawlerGrain crawler)
     {
-        var eventId = this.GetPrimaryKeyLong(out var venueId);
-
         if (!IsRegistered)
         {
             DeactivateOnIdle();
+
+            var eventId = this.GetPrimaryKeyLong(out var venueId);
             throw new VenueNotAvailableException(venueId, eventId);
         }
 
@@ -94,34 +92,17 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
 
     private bool IsRegistered => _state.State.Details is {};
 
-    private Task ReportCrawlerCountAsync()
+    private async Task ReportCrawlerCountAsync()
     {
-        if (!IsRegistered)
-        {
-            return Task.CompletedTask;
-        }
-
         var crawlerCount = _state.State.Crawlers.Count;
         if (crawlerCount == _lastReportedCrawlerCount)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        if (!_reportCrawlerCountTask.IsCompleted)
-        {
-            return Task.CompletedTask;
-        }
+        await _eventMapGrain.SetCrawlerCountAsync(_state.State.Details!.Id, crawlerCount);
 
-        _reportCrawlerCountTask = ReportCrawlerCountInternalAsync();
-
-        return _reportCrawlerCountTask;
-
-        async Task ReportCrawlerCountInternalAsync()
-        {
-            await _eventMapGrain.SetCrawlerCountAsync(_state.State.Details!.Id, crawlerCount);
-
-            _lastReportedCrawlerCount = crawlerCount;
-        }
+        _lastReportedCrawlerCount = crawlerCount;
     }
 }
 

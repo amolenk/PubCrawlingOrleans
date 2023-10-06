@@ -10,7 +10,6 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
     private readonly IPersistentState<BeerScoreState> _state;
     private readonly ILogger _logger;
 
-    private Task _reportScoreTask = Task.CompletedTask;
     private int _lastReportedScore;
 
     public BeerScoreGrain(
@@ -25,12 +24,11 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
     {
         // Set up a timer to regularly flush.
         RegisterTimer(
-            _ =>
+            async self =>
             {
-                ReportScoreAsync();
-                return Task.CompletedTask;
+                await ((BeerScoreGrain)self).ReportScoreAsync();
             },
-            null,
+            this,
             TimeSpan.FromSeconds(3),
             TimeSpan.FromSeconds(3));
 
@@ -51,9 +49,12 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
             }
         }
 
-        _state.State.Ratings[crawlerId] = rating;
+        if (rating != 0)
+        {
+            _state.State.Ratings[crawlerId] = rating;
 
-        await _state.WriteStateAsync();
+            await _state.WriteStateAsync();
+        }
     }
 
     private int CalculateScore(IEnumerable<int> ratings)
@@ -88,28 +89,17 @@ public class BeerScoreGrain : Grain, IBeerScoreGrain
         return (int)Math.Round(score);
     }
 
-    private Task ReportScoreAsync()
+    private async Task ReportScoreAsync()
     {
-        if (!_reportScoreTask.IsCompleted)
+        var score = CalculateScore(_state.State.Ratings.Values);
+        if (score != _lastReportedScore)
         {
-            return Task.CompletedTask;
-        }
+            var eventId = this.GetPrimaryKeyLong(out var beerId);
 
-        _reportScoreTask = ReportScoreInternalAsync();
-        return _reportScoreTask;
+            var leaderboardGrain = GrainFactory.GetGrain<IBeerLeaderboardGrain>(eventId);
+            await leaderboardGrain.UpdateScoreAsync(beerId, score);
 
-        async Task ReportScoreInternalAsync()
-        {
-            var score = CalculateScore(_state.State.Ratings.Values);
-            if (score != _lastReportedScore)
-            {
-                var eventId = this.GetPrimaryKeyLong(out var beerId);
-
-                var leaderboardGrain = GrainFactory.GetGrain<IBeerLeaderboardGrain>(eventId);
-                await leaderboardGrain.UpdateScoreAsync(beerId, score);
-
-                _lastReportedScore = score;
-            }
+            _lastReportedScore = score;
         }
     }
 }

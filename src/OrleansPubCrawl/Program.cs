@@ -112,6 +112,16 @@ app.MapPost("/events/{eventId}/venues/{venueId}/crawlers",
         return Results.Ok();
     });
 
+// Get crawler status
+app.MapGet("/events/{eventId}/crawlers/status",
+    async (IGrainFactory grainFactory, int eventId, [FromHeader] string crawlerId) =>
+    {
+        var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(primaryKey: eventId, keyExtension: crawlerId);
+        var result = await crawlerGrain.GetStatusAsync();
+    
+        return Results.Ok(result);
+    });
+
 // Check-out a crawler from a venue.
 app.MapDelete("/events/{eventId}/crawlers/status/checkin", 
     async (IGrainFactory grainFactory, int eventId, [FromHeader] string crawlerId) =>
@@ -138,16 +148,6 @@ app.MapPut("/events/{eventId}/beers/{beerId}/ratings",
         }
 
         return Results.Ok();
-    });
-
-// Get crawler status
-app.MapGet("/events/{eventId}/crawlers/status",
-    async (IGrainFactory grainFactory, int eventId, [FromHeader] string crawlerId) =>
-    {
-        var crawlerGrain = grainFactory.GetGrain<ICrawlerGrain>(primaryKey: eventId, keyExtension: crawlerId);
-        var result = await crawlerGrain.GetStatusAsync();
-    
-        return Results.Ok(result);
     });
 
 app.Run($"https://+:{5001 + instanceId}");

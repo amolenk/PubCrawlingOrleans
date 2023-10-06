@@ -5,7 +5,6 @@ public interface ICrawlerGrain : IGrainWithIntegerCompoundKey
     Task CheckInAsync(IDrinkingVenueGrain venue);
     Task CheckOutAsync();
 
-    Task<IDictionary<string, int>> GetBeerRatingsAsync();
     Task RateBeerAsync(string beerId, int rating);
 
     Task<CrawlerStatus> GetStatusAsync();
@@ -61,11 +60,6 @@ public class CrawlerGrain : Grain, ICrawlerGrain
 
         _state.State.CurrentVenue = null;
         await _state.WriteStateAsync();
-    }
-
-    public Task<IDictionary<string, int>> GetBeerRatingsAsync()
-    {
-        return Task.FromResult<IDictionary<string, int>>(_state.State.BeerRatings);
     }
 
     public async Task RateBeerAsync(string beerId, int rating)
