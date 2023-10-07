@@ -37,8 +37,8 @@ public class DrinkingVenueGrain : Grain, IDrinkingVenueGrain
                 await ((DrinkingVenueGrain)self).ReportCrawlerCountAsync();
             },
             this,
-            TimeSpan.FromSeconds(3),
-            TimeSpan.FromSeconds(3));
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1));
 
         await base.OnActivateAsync(cancellationToken);
     }
